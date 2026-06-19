@@ -10,6 +10,7 @@ import {
 import { createTextSprite, updateTextSprite } from '../world/textLabels.js';
 import { CrosswalkScene } from './CrosswalkScene.js';
 import { triggerReinterpret } from '../core/Reinterpret.js';
+import { horizontalDistance, getWorldXZ } from '../world/interact.js';
 
 const LANDINGS = [
   { floor: '4.0', y: 6, zCenter: 0, zRange: [-1.2, 1.2] },
@@ -145,7 +146,7 @@ export class StairsScene {
       this.materials.glass,
       { id: 'water', label: '水を飲む' },
     );
-    water.position.set(0.7, 6.2, 0.3);
+    water.position.set(0.45, 6.15, 0.4);
     this.group.add(water);
     this.interactables.push(water);
 
@@ -170,13 +171,6 @@ export class StairsScene {
 
   setupCallbacks() {
     this.game.onDrinkWater = () => this.drinkWater();
-    this.game.onBreathHeld = (held) => {
-      if (!held) return;
-      const pos = this.game.player.getPosition();
-      if (pos.distanceTo(this.handrail.position) < 1.5 && !this.handrailCooled) {
-        this.coolHandrail();
-      }
-    };
   }
 
   async runIntro() {
@@ -301,13 +295,13 @@ export class StairsScene {
 
   getNearestInteractable(playerPos) {
     let nearest = null;
-    let minDist = 1.4;
+    let bestDist = Infinity;
     for (const obj of this.interactables) {
-      const worldPos = new THREE.Vector3();
-      obj.getWorldPosition(worldPos);
-      const dist = playerPos.distanceTo(worldPos);
-      if (dist < minDist) {
-        minDist = dist;
+      const worldPos = getWorldXZ(obj);
+      const dist = horizontalDistance(playerPos, worldPos);
+      const range = obj.userData.id === 'water' ? 2.2 : 1.6;
+      if (dist < range && dist < bestDist) {
+        bestDist = dist;
         nearest = obj;
       }
     }
@@ -368,6 +362,17 @@ export class StairsScene {
   update(dt) {
     this.blockedMsgCooldown = Math.max(0, this.blockedMsgCooldown - dt);
 
+    if (
+      this.game.body.isBreathHeld()
+      && !this.handrailCooled
+    ) {
+      const pos = this.game.player.getPosition();
+      const railPos = getWorldXZ(this.handrail);
+      if (horizontalDistance(pos, railPos) < 2.0) {
+        this.coolHandrail();
+      }
+    }
+
     const pos = this.game.player.getPosition();
     const targetY = this.getHeightForZ(pos.z) + 1.55;
     this.game.player.baseY = targetY;
@@ -405,6 +410,5 @@ export class StairsScene {
     this.game.player.lockVertical = false;
     this.game.player.baseY = 1.55;
     this.game.onDrinkWater = null;
-    this.game.onBreathHeld = null;
   }
 }

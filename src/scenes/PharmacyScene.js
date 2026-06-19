@@ -10,6 +10,7 @@ import {
 import { createTextSprite } from '../world/textLabels.js';
 import { NurseStreetScene } from './NurseStreetScene.js';
 import { triggerReinterpret } from '../core/Reinterpret.js';
+import { horizontalDistance, getWorldXZ } from '../world/interact.js';
 
 const MEDICINES = {
   antipyretic: { label: '解熱剤', temp: 38.0, status: '患者', cost: '発汗' },
@@ -87,7 +88,19 @@ export class PharmacyScene {
     this.group.add(this.shelfGroup);
     this.buildShelfItem('antipyretic', -1.2, 1.0, -2.5);
     this.buildShelfItem('sudorific', 1.2, 1.0, -2.5);
-    this.buildShelfItem('outside', 0, 1.2, -3.0);
+
+    const outside = createInteractableMesh(
+      new THREE.BoxGeometry(0.35, 0.45, 0.2),
+      this.materials.glass,
+      { id: 'med_outside', label: `${MEDICINES.outside.label}を買う（代金：${MEDICINES.outside.cost}）` },
+    );
+    outside.position.set(0, 1.05, -1.8);
+    outside.material = outside.material.clone();
+    outside.material.emissive = new THREE.Color(0x88ccff);
+    outside.material.emissiveIntensity = 0.4;
+    this.outsideMesh = outside;
+    this.group.add(outside);
+    this.interactables.push(outside);
 
     this.door = createInteractableMesh(
       new THREE.BoxGeometry(1.0, 2.0, 0.1),
@@ -118,12 +131,6 @@ export class PharmacyScene {
     mesh.position.set(x, y, z);
     this.shelfGroup.add(mesh);
     this.interactables.push(mesh);
-    if (id === 'outside') {
-      mesh.material = mesh.material.clone();
-      mesh.material.emissive = new THREE.Color(0x88ccff);
-      mesh.material.emissiveIntensity = 0.4;
-      this.outsideMesh = mesh;
-    }
   }
 
   async runIntro() {
@@ -139,7 +146,7 @@ export class PharmacyScene {
       duration: 4500,
     });
     this.game.state.getRule('pharmacy_exit')?.demonstrate();
-    this.game.ui.setObjective('回転棚の「外」を買う → 出口');
+    this.game.ui.setObjective('正面の「外」を買う → 出口');
   }
 
   buyMedicine(id) {
@@ -219,23 +226,22 @@ export class PharmacyScene {
 
   getNearestInteractable(playerPos) {
     let nearest = null;
-    let minDist = 1.6;
+    let bestDist = Infinity;
     for (const obj of this.interactables) {
       if (obj.userData.id?.startsWith('med_outside') && this.boughtOutside) continue;
       if (obj.userData.id?.startsWith('med_') && obj.userData.id !== 'med_outside' && this.boughtMedicine) continue;
 
-      const worldPos = new THREE.Vector3();
-      obj.getWorldPosition(worldPos);
-      const dist = playerPos.distanceTo(worldPos);
-      if (dist < minDist) {
-        minDist = dist;
+      const worldPos = getWorldXZ(obj);
+      const dist = horizontalDistance(playerPos, worldPos);
+      const range = obj.userData.id === 'med_outside' ? 2.2 : 1.8;
+      if (dist < range && dist < bestDist) {
+        bestDist = dist;
         nearest = obj;
       }
     }
     if (this.boughtOutside && this.door.visible) {
-      const dPos = new THREE.Vector3();
-      this.door.getWorldPosition(dPos);
-      if (playerPos.distanceTo(dPos) < 1.6) return this.door;
+      const dPos = getWorldXZ(this.door);
+      if (horizontalDistance(playerPos, dPos) < 1.8) return this.door;
     }
     return nearest;
   }
@@ -292,7 +298,7 @@ export class PharmacyScene {
     if (nearest && !this.exited) {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
     } else if (!this.boughtOutside && !this.exited) {
-      this.game.ui.showPrompt('回転棚の青い「外」を探して E');
+      this.game.ui.showPrompt('正面の青い「外」に E');
     } else if (!this.exited) {
       this.game.ui.hidePrompt();
     }

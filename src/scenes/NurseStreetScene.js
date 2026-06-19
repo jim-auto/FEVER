@@ -262,7 +262,7 @@ export class NurseStreetScene {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
     } else if (!this.exited && this.nursePhase >= 1 && !this.guideShown) {
       this.guideShown = true;
-      this.game.ui.showPrompt('足元を避け、地面の暗い影の帯を通る');
+      this.game.ui.showPrompt('W で前へ · 左の歩道（足元を避ける）');
     } else if (!this.exited) {
       this.game.ui.hidePrompt();
     }

@@ -277,8 +277,8 @@ export class HomeScene {
       if (!state.hasFlag('door_relocated')) {
         ui.showSubtitle({
           audio: '扉はここにある。でも、本当にここだったか。',
-          text: '目を閉じて、場所を書き換えられるかもしれない',
-          duration: 5000,
+          text: 'Shift を1秒以上 · 目を閉じて扉を書き換える',
+          duration: 5500,
         });
         return;
       }

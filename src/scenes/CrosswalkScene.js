@@ -10,6 +10,7 @@ import {
 import { createTextSprite } from '../world/textLabels.js';
 import { PharmacyScene } from './PharmacyScene.js';
 import { triggerReinterpret } from '../core/Reinterpret.js';
+import { horizontalDistance, getWorldXZ } from '../world/interact.js';
 
 const CROSSWALK_Z = 0;
 const BLOCK_Z = -0.3;
@@ -417,17 +418,16 @@ export class CrosswalkScene {
 
   getNearestInteractable(playerPos) {
     let nearest = null;
-    let minDist = 1.8;
+    let bestDist = Infinity;
     for (const obj of this.interactables) {
       if (obj.userData.id === 'laundry' && this.scheduleState !== 'red') continue;
       if (obj.userData.id === 'emergency' && this.scheduleState !== 'red') continue;
       if (obj.userData.id === 'bench' && this.scheduleState !== 'red') continue;
 
-      const worldPos = new THREE.Vector3();
-      obj.getWorldPosition(worldPos);
-      const dist = playerPos.distanceTo(worldPos);
-      if (dist < minDist) {
-        minDist = dist;
+      const worldPos = getWorldXZ(obj);
+      const dist = horizontalDistance(playerPos, worldPos);
+      if (dist < 2.2 && dist < bestDist) {
+        bestDist = dist;
         nearest = obj;
       }
     }
@@ -500,6 +500,10 @@ export class CrosswalkScene {
     const nearest = this.getNearestInteractable(pos);
     if (nearest && !this.crossed) {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (!this.crossed && this.scheduleState === 'red' && !this.canCross()) {
+      this.game.ui.showPrompt('右: 緊急登録 / 左: 洗濯 / ベンチ: 日暮れ');
+    } else if (!this.crossed && this.canCross()) {
+      this.game.ui.showPrompt('W で横断歩道を渡る');
     } else if (!this.crossed) {
       this.game.ui.hidePrompt();
     }
