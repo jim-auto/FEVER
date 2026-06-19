@@ -158,6 +158,20 @@ export class UIManager {
     }
   }
 
+  setObjective(text) {
+    if (!this.objectiveEl) return;
+    this.objectiveEl.textContent = text;
+    this.objectiveEl.classList.add('guide');
+    this.objectiveEl.style.opacity = '1';
+  }
+
+  resetObjective() {
+    if (!this.objectiveEl) return;
+    this.objectiveEl.textContent = this.state.objective;
+    this.objectiveEl.classList.remove('guide');
+    this.objectiveEl.style.opacity = '1';
+  }
+
   showSubtitle({ speaker, audio, text, duration = 4000 }) {
     clearTimeout(this.subtitleTimeout);
     const textHidden = !this.a11y.showTextLayer || !text;

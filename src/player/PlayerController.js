@@ -88,6 +88,15 @@ export class PlayerController {
     this.camera.position.set(x, y ?? this.baseY, z);
   }
 
+  lookAtPoint(x, z) {
+    const pos = this.camera.position;
+    const yaw = Math.atan2(x - pos.x, z - pos.z);
+    this.euler.setFromQuaternion(this.camera.quaternion);
+    this.euler.y = yaw;
+    this.euler.x = Math.max(-0.15, Math.min(0.15, this.euler.x));
+    this.camera.quaternion.setFromEuler(this.euler);
+  }
+
   getPosition() {
     return this.camera.position.clone();
   }

@@ -60,6 +60,18 @@ body {
   z-index: 100;
 }
 
+.objective-display.guide {
+  letter-spacing: 0.12em;
+  color: rgba(168, 210, 255, 0.95);
+  text-shadow: 0 0 20px rgba(100, 160, 220, 0.45);
+  animation: guide-pulse 2s ease-in-out infinite;
+}
+
+@keyframes guide-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
 .patient-ticket {
   position: fixed;
   bottom: 1.5rem;

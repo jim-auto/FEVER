@@ -10,6 +10,7 @@ import {
   addHomeDetails,
 } from '../world/environment.js';
 import { StairsScene } from './StairsScene.js';
+import { createTextSprite } from '../world/textLabels.js';
 
 /**
  * プロローグ — 発汗する六畳間
@@ -27,6 +28,9 @@ export class HomeScene {
     this.doorFrame = null;
     this.phoneUsed = false;
     this.introComplete = false;
+    this.phoneGroup = null;
+    this.phoneLabel = null;
+    this.phoneLight = null;
     this.interactables = [];
   }
 
@@ -62,29 +66,81 @@ export class HomeScene {
     this.group.add(futon);
 
     const table = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.4, 0.35),
+      new THREE.BoxGeometry(0.9, 0.4, 0.55),
       this.materials.wood,
     );
-    table.position.set(0.8, 0.2, -0.5);
+    table.position.set(0, 0.2, -1.05);
     this.group.add(table);
+
+    const tableMark = new THREE.Mesh(
+      new THREE.CircleGeometry(0.22, 24),
+      new THREE.MeshStandardMaterial({
+        color: 0x6a9ec8,
+        emissive: 0x4a7ea8,
+        emissiveIntensity: 0.35,
+        transparent: true,
+        opacity: 0.55,
+      }),
+    );
+    tableMark.rotation.x = -Math.PI / 2;
+    tableMark.position.set(0, 0.405, -1.05);
+    this.group.add(tableMark);
+    this.phoneMark = tableMark;
 
     const thermometer = createInteractableMesh(
       new THREE.BoxGeometry(0.08, 0.25, 0.02),
       this.materials.thermometer,
       { id: 'thermometer', label: '体温計 — 40.2°C' },
     );
-    thermometer.position.set(0.8, 0.52, -0.5);
+    thermometer.position.set(0.32, 0.52, -1.05);
     this.group.add(thermometer);
     this.interactables.push(thermometer);
 
-    const phone = createInteractableMesh(
-      new THREE.BoxGeometry(0.12, 0.04, 0.06),
-      this.materials.phone,
+    this.phoneGroup = new THREE.Group();
+    this.phoneGroup.position.set(0, 0.45, -1.05);
+
+    const phoneBase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.22, 0.06, 0.16),
+      this.materials.phone.clone(),
+    );
+    phoneBase.material.emissive = new THREE.Color(0x88ccff);
+    phoneBase.material.emissiveIntensity = 0.45;
+    this.phoneGroup.add(phoneBase);
+
+    const phoneHandset = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, 0.05, 0.22),
+      phoneBase.material.clone(),
+    );
+    phoneHandset.position.set(0.08, 0.06, 0.02);
+    phoneHandset.rotation.y = 0.35;
+    this.phoneGroup.add(phoneHandset);
+    this.phoneMesh = phoneBase;
+
+    const phoneHit = createInteractableMesh(
+      new THREE.BoxGeometry(0.45, 0.35, 0.45),
+      new THREE.MeshBasicMaterial({ visible: false }),
       { id: 'phone', label: '病院へ電話する' },
     );
-    phone.position.set(0.72, 0.42, -0.48);
-    this.group.add(phone);
-    this.interactables.push(phone);
+    phoneHit.position.set(0, 0.12, 0);
+    this.phoneGroup.add(phoneHit);
+    this.interactables.push(phoneHit);
+
+    this.phoneLabel = createTextSprite('病院へ電話', {
+      fontSize: 40,
+      color: '#1a3048',
+      bgColor: 'rgba(168, 210, 255, 0.95)',
+      width: 320,
+      height: 96,
+    });
+    this.phoneLabel.position.set(0, 0.55, 0);
+    this.phoneLabel.scale.set(1.1, 0.55, 1);
+    this.phoneGroup.add(this.phoneLabel);
+
+    this.phoneLight = new THREE.PointLight(0x88bbee, 0.9, 3.5);
+    this.phoneLight.position.set(0, 0.25, 0);
+    this.phoneGroup.add(this.phoneLight);
+
+    this.group.add(this.phoneGroup);
 
     const { tube, light } = addFluorescent(this.group, this.materials, 0, 2.35, 0, 0.8);
     this.fluorescentMesh = tube;
@@ -143,6 +199,15 @@ export class HomeScene {
       audio: '熱い。体温計は40.2度を指している。',
       duration: 4000,
     });
+    await this.game.ui.wait(4200);
+    this.game.ui.setObjective('→ 前の机 · 電話に E');
+    this.game.ui.showSubtitle({
+      audio: '目の前の机に電話がある。先に病院へ連絡してから、外へ出よう。',
+      text: 'W で前へ · 近づいて E でかける',
+      duration: 5500,
+    });
+    this.game.player.lookAtPoint(0, -1.05);
+    this.introComplete = true;
   }
 
   checkCollision(pos) {
@@ -153,13 +218,14 @@ export class HomeScene {
 
   getNearestInteractable(playerPos) {
     let nearest = null;
-    let minDist = 1.2;
+    let bestDist = Infinity;
     for (const obj of this.interactables) {
       const worldPos = new THREE.Vector3();
       obj.getWorldPosition(worldPos);
       const dist = playerPos.distanceTo(worldPos);
-      if (dist < minDist) {
-        minDist = dist;
+      const range = obj.userData.id === 'phone' ? 2.4 : 1.2;
+      if (dist < range && dist < bestDist) {
+        bestDist = dist;
         nearest = obj;
       }
     }
@@ -180,6 +246,10 @@ export class HomeScene {
 
     if (id === 'phone' && !this.phoneUsed) {
       this.phoneUsed = true;
+      if (this.phoneLabel) this.phoneLabel.visible = false;
+      if (this.phoneMark) this.phoneMark.visible = false;
+      if (this.phoneLight) this.phoneLight.intensity = 0;
+      this.game.ui.resetObjective();
       this.runPhoneSequence();
       return;
     }
@@ -188,7 +258,8 @@ export class HomeScene {
       if (!this.phoneUsed) {
         ui.showSubtitle({
           audio: '……先に、病院へ連絡すべきかもしれない。',
-          duration: 3000,
+          text: '机の上の電話に近づき、E キーでかける',
+          duration: 4500,
         });
         return;
       }
@@ -257,11 +328,34 @@ export class HomeScene {
       this.fluorescentMesh.material.emissiveIntensity = 0.5 + Math.sin(this.breathPhase * 3.1) * 0.08;
     }
 
+    if (this.phoneMesh && !this.phoneUsed) {
+      const pulse = 0.35 + Math.sin(this.breathPhase * 2.4) * 0.2;
+      this.phoneMesh.material.emissiveIntensity = pulse;
+      if (this.phoneMark) {
+        this.phoneMark.material.emissiveIntensity = 0.25 + Math.sin(this.breathPhase * 2.4) * 0.15;
+        this.phoneMark.scale.setScalar(1 + Math.sin(this.breathPhase * 2.4) * 0.06);
+      }
+      if (this.phoneLabel) {
+        this.phoneLabel.position.y = 0.55 + Math.sin(this.breathPhase * 2.4) * 0.04;
+      }
+      if (this.phoneLight) {
+        this.phoneLight.intensity = 0.7 + Math.sin(this.breathPhase * 2.4) * 0.25;
+      }
+    }
+
     const playerPos = this.game.player.getPosition();
     const nearest = this.getNearestInteractable(playerPos);
+    const phoneDist = playerPos.distanceTo(new THREE.Vector3(0, playerPos.y, -1.05));
 
-    if (nearest) {
+    if (nearest?.userData.id === 'phone') {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (nearest) {
+      this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (this.introComplete && !this.phoneUsed) {
+      const hint = phoneDist > 2.2
+        ? 'W で前へ — 机の青い光が電話'
+        : 'もう少し近づいて E';
+      this.game.ui.showPrompt(hint);
     } else {
       this.game.ui.hidePrompt();
     }
