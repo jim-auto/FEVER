@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createMaterials, setupLighting } from '../world/materials.js';
+import { applyAtmosphere, clearAtmosphere, createMaterialSet } from '../world/environment.js';
 
 /**
  * MVP フィナーレ — 歩行病院の目撃
@@ -8,7 +8,7 @@ export class FinaleScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.phase = 0;
     this.phaseTimer = 0;
     this.hospitalGroup = null;
@@ -17,10 +17,8 @@ export class FinaleScene {
 
   load() {
     const { scene, state, ui } = this.game;
-    scene.background = new THREE.Color(0x889098);
-    scene.fog = new THREE.Fog(0x889098, 10, 50);
+    applyAtmosphere(scene, 'finale');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.patientTicket.location = '病院が見える広場';
     ui.updatePatientTicket();
@@ -39,6 +37,16 @@ export class FinaleScene {
     );
     ground.rotation.x = -Math.PI / 2;
     this.group.add(ground);
+
+    for (let i = 0; i < 12; i++) {
+      const h = 3 + Math.random() * 6;
+      const pole = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, h, 0.15),
+        this.materials.concrete,
+      );
+      pole.position.set(-10 + i * 2, h / 2, -8 - Math.random() * 3);
+      this.group.add(pole);
+    }
   }
 
   buildHospital() {
@@ -156,6 +164,7 @@ export class FinaleScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
   }
 }

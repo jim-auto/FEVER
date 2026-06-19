@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { Rule } from '../core/GameState.js';
-import { createMaterials, setupLighting, createInteractableMesh } from '../world/materials.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  createInteractableMesh,
+  addStreetBuildings,
+} from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { PharmacyScene } from './PharmacyScene.js';
 
@@ -14,7 +20,7 @@ export class CrosswalkScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.interactables = [];
     this.crosswalkStripes = [];
     this.scheduleState = 'red';
@@ -32,10 +38,8 @@ export class CrosswalkScene {
 
   load() {
     const { scene, state, ui } = this.game;
-    scene.background = new THREE.Color(0x889098);
-    scene.fog = new THREE.Fog(0x889098, 12, 35);
+    applyAtmosphere(scene, 'crosswalk');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.registerRule(new Rule({
       id: 'red_schedule',
@@ -48,6 +52,7 @@ export class CrosswalkScene {
     ui.updatePatientTicket();
 
     this.buildIntersection();
+    addStreetBuildings(this.group, this.materials);
     this.buildInteractables();
     this.buildNPCs();
 
@@ -82,7 +87,7 @@ export class CrosswalkScene {
 
     const sidewalkS = new THREE.Mesh(
       new THREE.PlaneGeometry(roadW, 6),
-      this.materials.vinylFloor,
+      this.materials.concrete,
     );
     sidewalkS.rotation.x = -Math.PI / 2;
     sidewalkS.position.set(0, 0.01, -6);
@@ -90,7 +95,7 @@ export class CrosswalkScene {
 
     const sidewalkN = new THREE.Mesh(
       new THREE.PlaneGeometry(roadW, 6),
-      this.materials.vinylFloor,
+      this.materials.concrete,
     );
     sidewalkN.rotation.x = -Math.PI / 2;
     sidewalkN.position.set(0, 0.01, 6);
@@ -356,8 +361,7 @@ export class CrosswalkScene {
     });
     await ui.wait(2000);
     this.isSunset = true;
-    this.game.scene.background = new THREE.Color(0x4a5060);
-    this.game.scene.fog.color.set(0x4a5060);
+    applyAtmosphere(this.game.scene, 'crosswalk_sunset');
     await ui.wait(3000);
     this.scheduleState = 'faded';
     this.game.state.patientTicket.appointment = '判別不能';
@@ -503,8 +507,7 @@ export class CrosswalkScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
-    this.game.scene.background = new THREE.Color(0x0a0c0e);
-    this.game.scene.fog = new THREE.Fog(0x0a0c0e, 6, 14);
   }
 }

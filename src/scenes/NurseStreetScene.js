@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { Rule } from '../core/GameState.js';
-import { createMaterials, setupLighting, createInteractableMesh } from '../world/materials.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  createInteractableMesh,
+  addNurseStreetSkyline,
+} from '../world/environment.js';
 import { FinaleScene } from './FinaleScene.js';
 
 /**
@@ -10,7 +16,7 @@ export class NurseStreetScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.interactables = [];
     this.nursePhase = 0;
     this.nurseZ = -20;
@@ -21,10 +27,8 @@ export class NurseStreetScene {
 
   load() {
     const { scene, state, ui } = this.game;
-    scene.background = new THREE.Color(0x707880);
-    scene.fog = new THREE.Fog(0x707880, 8, 40);
+    applyAtmosphere(scene, 'nurse');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.registerRule(new Rule({
       id: 'giant_nurse',
@@ -36,6 +40,7 @@ export class NurseStreetScene {
     ui.updatePatientTicket();
 
     this.buildStreet();
+    addNurseStreetSkyline(this.group, this.materials);
     this.buildGiantNurse();
     this.game.player.setPosition(0, 1.55, 8);
     this.game.player.enable();
@@ -213,6 +218,7 @@ export class NurseStreetScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
   }
 }

@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { Rule, FeverLayer } from '../core/GameState.js';
-import { createMaterials, setupLighting, createInteractableMesh } from '../world/materials.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  createInteractableMesh,
+  addPharmacyDecor,
+} from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { NurseStreetScene } from './NurseStreetScene.js';
 
@@ -17,7 +23,7 @@ export class PharmacyScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.interactables = [];
     this.shelfGroup = new THREE.Group();
     this.shelfAngle = 0;
@@ -28,10 +34,8 @@ export class PharmacyScene {
 
   load() {
     const { scene, state, ui } = this.game;
-    scene.background = new THREE.Color(0xd8dce4);
-    scene.fog = new THREE.Fog(0xd8dce4, 6, 18);
+    applyAtmosphere(scene, 'pharmacy');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.registerRule(new Rule({
       id: 'pharmacy_exit',
@@ -43,6 +47,7 @@ export class PharmacyScene {
     ui.updatePatientTicket();
 
     this.buildPharmacy();
+    addPharmacyDecor(this.group, this.materials);
     this.game.player.setPosition(0, 1.55, 0);
     this.game.player.enable();
     this.runIntro();
@@ -261,6 +266,7 @@ export class PharmacyScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
   }
 }

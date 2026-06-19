@@ -1,6 +1,14 @@
 import * as THREE from 'three';
 import { Rule } from '../core/GameState.js';
-import { createMaterials, setupLighting, buildRoom, createInteractableMesh } from '../world/materials.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  buildRoom,
+  createInteractableMesh,
+  addFluorescent,
+  addHomeDetails,
+} from '../world/environment.js';
 import { StairsScene } from './StairsScene.js';
 
 /**
@@ -10,7 +18,7 @@ export class HomeScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.breathPhase = 0;
     this.doorPosition = 0;
     this.doorMesh = null;
@@ -22,8 +30,8 @@ export class HomeScene {
 
   load() {
     const { scene, state } = this.game;
+    applyAtmosphere(scene, 'home');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.registerRule(new Rule({
       id: 'observation',
@@ -35,6 +43,7 @@ export class HomeScene {
     this.room = room;
     this.buildFurniture();
     this.buildDoor();
+    addHomeDetails(this.group, this.materials);
     this.setupCallbacks();
 
     this.game.player.setPosition(0, 1.55, 0.5);
@@ -78,17 +87,9 @@ export class HomeScene {
     this.group.add(phone);
     this.interactables.push(phone);
 
-    const light = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 0.04, 0.15),
-      this.materials.fluorescent,
-    );
-    light.position.set(0, 2.35, 0);
-    this.group.add(light);
-
-    const glow = new THREE.PointLight(0xf4f6f0, 0.5, 4);
-    glow.position.copy(light.position);
-    this.group.add(glow);
-    this.fluorescentLight = glow;
+    const { tube, light } = addFluorescent(this.group, this.materials, 0, 2.35, 0, 0.8);
+    this.fluorescentMesh = tube;
+    this.fluorescentLight = light;
   }
 
   buildDoor() {
@@ -245,8 +246,15 @@ export class HomeScene {
     this.room.leftWall.scale.x = breathScale;
     this.room.rightWall.scale.x = breathScale;
 
+    const sweat = 0.03 + Math.sin(this.breathPhase * 0.7) * 0.015;
+    this.room.leftWall.material.emissive = new THREE.Color(0x887766);
+    this.room.leftWall.material.emissiveIntensity = sweat;
+
     if (this.fluorescentLight) {
-      this.fluorescentLight.intensity = 0.45 + Math.sin(this.breathPhase * 3.1) * 0.03;
+      this.fluorescentLight.intensity = 0.38 + Math.sin(this.breathPhase * 3.1) * 0.04;
+    }
+    if (this.fluorescentMesh) {
+      this.fluorescentMesh.material.emissiveIntensity = 0.5 + Math.sin(this.breathPhase * 3.1) * 0.08;
     }
 
     const playerPos = this.game.player.getPosition();
@@ -260,6 +268,7 @@ export class HomeScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
   }
 }

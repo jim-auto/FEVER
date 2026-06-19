@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { Rule, temperatureToFloor, canAccessFloor } from '../core/GameState.js';
-import { createMaterials, setupLighting, createInteractableMesh } from '../world/materials.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  createInteractableMesh,
+  addStairwellDetails,
+} from '../world/environment.js';
 import { createTextSprite, updateTextSprite } from '../world/textLabels.js';
 import { CrosswalkScene } from './CrosswalkScene.js';
 
@@ -17,7 +23,7 @@ export class StairsScene {
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
-    this.materials = createMaterials();
+    this.materials = createMaterialSet();
     this.interactables = [];
     this.floorSigns = [];
     this.ruleDemonstrated = 0;
@@ -29,9 +35,8 @@ export class StairsScene {
 
   load() {
     const { scene, state, ui } = this.game;
-    scene.fog = new THREE.Fog(0x1a1c20, 8, 22);
+    applyAtmosphere(scene, 'stairs');
     scene.add(this.group);
-    setupLighting(scene);
 
     state.registerRule(new Rule({
       id: 'decimal_floor',
@@ -45,6 +50,7 @@ export class StairsScene {
 
     this.buildStairwell();
     this.buildInteractables();
+    addStairwellDetails(this.group, this.materials, 2.4, 12);
     this.setupCallbacks();
 
     this.game.player.setPosition(0, 6 + 1.55, 0);
@@ -87,6 +93,13 @@ export class StairsScene {
       sign.position.set(0, landing.y + 1.6, landing.zCenter - 1.0);
       this.group.add(sign);
       this.floorSigns.push({ sign, floor: landing.floor });
+
+      const platEdge = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.04, 0.04, 2.44),
+        this.materials.concrete,
+      );
+      platEdge.position.set(0, landing.y + 0.04, landing.zCenter);
+      this.group.add(platEdge);
     }
 
     this.buildStairRamp(0, 5, 6, 3);
@@ -101,15 +114,6 @@ export class StairsScene {
     handrail.userData = { id: 'handrail', interactable: false };
     this.group.add(handrail);
     this.handrail = handrail;
-
-    for (let i = 0; i < 4; i++) {
-      const light = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.03, 0.12),
-        this.materials.fluorescent,
-      );
-      light.position.set(0, 7.8, i * 3.2);
-      this.group.add(light);
-    }
   }
 
   buildStairRamp(zStart, zEnd, yStart, yEnd) {
@@ -374,6 +378,7 @@ export class StairsScene {
   }
 
   unload() {
+    clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
     this.game.onDrinkWater = null;
     this.game.onBreathHeld = null;
