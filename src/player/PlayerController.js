@@ -18,6 +18,7 @@ export class PlayerController {
     this.breathPhase = 0;
     this.baseY = 1.55;
     this.collisionRadius = 0.35;
+    this.lockVertical = false;
 
     this._onKeyDown = this.onKeyDown.bind(this);
     this._onKeyUp = this.onKeyUp.bind(this);
@@ -128,7 +129,7 @@ export class PlayerController {
       }
     }
 
-    if (!this.reducedMotion) {
+    if (!this.reducedMotion && !this.lockVertical) {
       this.breathPhase += dt * 1.8;
       const bob = this.reducedShake ? 0 : Math.sin(this.breathPhase) * this.breathBob;
       this.camera.position.y = this.baseY + bob;

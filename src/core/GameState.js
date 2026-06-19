@@ -20,9 +20,9 @@ export function temperatureToLayer(temp) {
   return FeverLayer.WHITE;
 }
 
-/** 体温から階数表示を導出 — 39.4°C → 3.9階 */
+/** 体温から階数表示を導出 — 40.2°C → 4.0階、39.4°C → 3.9階 */
 export function temperatureToFloor(temp) {
-  return (Math.floor(temp * 10) / 10).toFixed(1);
+  return (Math.floor(temp) / 10).toFixed(1);
 }
 
 /** 指定階へアクセス可能か（体温が階数以下） */

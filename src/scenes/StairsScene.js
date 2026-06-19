@@ -59,6 +59,7 @@ export class StairsScene {
     this.setupCallbacks();
 
     this.game.player.setPosition(0, 6 + 1.55, 0);
+    this.game.player.lockVertical = true;
     this.game.player.enable();
 
     this.runIntro();
@@ -248,24 +249,27 @@ export class StairsScene {
   }
 
   getRequiredFloorForZ(z) {
-    if (z < 2.5) return 4.0;
-    if (z < 7.5) return 3.9;
+    if (z < 2.0) return 4.0;
+    if (z < 7.8) return 3.9;
     return 3.8;
   }
 
+  canMoveToZ(z) {
+    return canAccessFloor(this.game.state.temperature, this.getRequiredFloorForZ(z));
+  }
+
   checkCollision(pos) {
-    const w = 1.0;
+    const w = 1.15;
     if (Math.abs(pos.x) > w) return false;
 
     const z = pos.z;
     if (z < -1.5 || z > 11.8) return false;
 
-    const required = this.getRequiredFloorForZ(z);
-    if (!canAccessFloor(this.game.state.temperature, required)) {
+    if (!this.canMoveToZ(z)) {
       if (this.blockedMsgCooldown <= 0) {
         this.blockedMsgCooldown = 2.5;
         this.blockCount += 1;
-        this.showBlockedMessage(required);
+        this.showBlockedMessage(this.getRequiredFloorForZ(z));
         if (this.blockCount >= 4 && !this.reinterpreted) {
           this.reinterpreted = true;
           triggerReinterpret(this.game, 'stairs');
@@ -279,17 +283,17 @@ export class StairsScene {
 
   showBlockedMessage(requiredFloor) {
     const { ui, state } = this.game;
-    const current = temperatureToFloor(state.temperature);
+    const currentFloor = temperatureToFloor(state.temperature);
 
     if (this.ruleDemonstrated < 1 && !this.npcTalked) {
       ui.showSubtitle({
-        audio: `階段が、${current}度の人間を${requiredFloor}階へ下ろそうとしない。`,
-        text: '身体を冷やせば、階数も下がる',
+        audio: `階段が、${currentFloor}階相当の体温を${requiredFloor}階へ下ろそうとしない。`,
+        text: 'E で水を飲む · 手すりで Space（息）',
         duration: 5000,
       });
     } else {
       ui.showSubtitle({
-        audio: `${requiredFloor}階へ下りるには、体温を${requiredFloor}以下にする必要がある。`,
+        audio: `${requiredFloor}階へ下りるには、体温を${requiredFloor}以下（${requiredFloor}階相当）にする。`,
         duration: 3500,
       });
     }
@@ -366,22 +370,26 @@ export class StairsScene {
 
     const pos = this.game.player.getPosition();
     const targetY = this.getHeightForZ(pos.z) + 1.55;
+    this.game.player.baseY = targetY;
     this.game.player.camera.position.y = THREE.MathUtils.lerp(
       this.game.player.camera.position.y,
       targetY,
-      0.15,
+      Math.min(1, dt * 14),
     );
-    this.game.player.baseY = targetY;
 
     const currentFloor = temperatureToFloor(this.game.state.temperature);
     for (const { sign, floor } of this.floorSigns) {
       const active = floor === currentFloor;
-      updateTextSprite(sign, active ? `${floor} 階 ←` : `${floor} 階`);
+      updateTextSprite(sign, active ? `${floor} 階 ← 現在地` : `${floor} 階`);
     }
 
     const nearest = this.getNearestInteractable(pos);
     if (nearest) {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (!this.canMoveToZ(pos.z + 1.2) && this.canMoveToZ(pos.z)) {
+      this.game.ui.showPrompt('下の階へ — E で水 / 手すりで Space');
+    } else if (pos.z < 9 && this.canMoveToZ(pos.z)) {
+      this.game.ui.showPrompt('W で階段を下る');
     } else {
       this.game.ui.hidePrompt();
     }
@@ -394,6 +402,8 @@ export class StairsScene {
   unload() {
     clearAtmosphere(this.game.scene);
     this.game.scene.remove(this.group);
+    this.game.player.lockVertical = false;
+    this.game.player.baseY = 1.55;
     this.game.onDrinkWater = null;
     this.game.onBreathHeld = null;
   }
