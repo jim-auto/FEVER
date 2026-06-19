@@ -4,6 +4,7 @@ import { PlayerController } from '../player/PlayerController.js';
 import { BodyActions } from '../player/BodyActions.js';
 import { UIManager } from '../ui/UIManager.js';
 import { AudioManager } from '../audio/AudioManager.js';
+import { TouchControls } from '../input/TouchControls.js';
 import { HomeScene } from '../scenes/HomeScene.js';
 
 export class Game {
@@ -42,6 +43,7 @@ export class Game {
 
     this.player = new PlayerController(this.camera, canvas);
     this.body = new BodyActions(this, this.ui);
+    this.touch = new TouchControls(this);
 
     this.ui.onA11yChange = (a11y) => {
       this.player.reducedMotion = a11y.reducedMotion;

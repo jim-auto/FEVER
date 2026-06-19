@@ -73,9 +73,13 @@ export class PlayerController {
 
   onMouseMove(e) {
     if (!this.enabled || document.pointerLockElement !== this.domElement) return;
+    this.applyLookDelta(e.movementX, e.movementY);
+  }
+
+  applyLookDelta(mdx, mdy) {
     this.euler.setFromQuaternion(this.camera.quaternion);
-    this.euler.y -= e.movementX * this.lookSpeed;
-    this.euler.x -= e.movementY * this.lookSpeed;
+    this.euler.y -= mdx * this.lookSpeed;
+    this.euler.x -= mdy * this.lookSpeed;
     this.euler.x = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, this.euler.x));
     this.camera.quaternion.setFromEuler(this.euler);
   }

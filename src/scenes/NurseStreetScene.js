@@ -8,6 +8,7 @@ import {
   addNurseStreetSkyline,
 } from '../world/environment.js';
 import { FinaleScene } from './FinaleScene.js';
+import { triggerReinterpret } from '../core/Reinterpret.js';
 
 /**
  * 巨大看護師通り — 影の間を通過する
@@ -25,6 +26,10 @@ export class NurseStreetScene {
     this.shadowZones = [];
     this.exited = false;
     this.blockCooldown = 0;
+    this.blockCount = 0;
+    this.reinterpreted = false;
+    this.groundShadow = null;
+    this.footstepTimer = 0;
   }
 
   load() {
@@ -118,6 +123,27 @@ export class NurseStreetScene {
     this.nurseGroup.add(this.shadow);
 
     this.group.add(this.nurseGroup);
+
+    this.groundShadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(6, 14),
+      new THREE.MeshStandardMaterial({
+        color: 0x0a0c10,
+        transparent: true,
+        opacity: 0.45,
+        roughness: 1,
+      }),
+    );
+    this.groundShadow.rotation.x = -Math.PI / 2;
+    this.groundShadow.position.y = 0.025;
+    this.group.add(this.groundShadow);
+
+    this.shadowGapL = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.2, 14),
+      new THREE.MeshStandardMaterial({ color: 0x2a3040, transparent: true, opacity: 0.25 }),
+    );
+    this.shadowGapL.rotation.x = -Math.PI / 2;
+    this.shadowGapL.position.y = 0.026;
+    this.group.add(this.shadowGapL);
   }
 
   async runIntro() {
@@ -151,10 +177,15 @@ export class NurseStreetScene {
     if (this.isBlockedByNurse(pos)) {
       if (this.blockCooldown <= 0) {
         this.blockCooldown = 2;
+        this.blockCount += 1;
         this.game.ui.showSubtitle({
           audio: '看護師の足元に触れそうになる。影の中なら、通れる。',
           duration: 3500,
         });
+        if (this.blockCount >= 3 && !this.reinterpreted) {
+          this.reinterpreted = true;
+          triggerReinterpret(this.game, 'nurse');
+        }
       }
       return false;
     }
@@ -204,6 +235,18 @@ export class NurseStreetScene {
     if (this.nursePhase >= 1) {
       this.nurseGroup.position.z += dt * 1.5;
       this.shadow.position.x = -2 + Math.sin(Date.now() * 0.001) * 0.3;
+
+      const nursePos = this.nurseGroup.position;
+      const shadowX = nursePos.x - 2;
+      const shadowZ = nursePos.z;
+      this.groundShadow.position.set(shadowX, 0.025, shadowZ);
+      this.shadowGapL.position.set(shadowX - 3.2, 0.026, shadowZ);
+
+      this.footstepTimer += dt;
+      if (this.footstepTimer > 1.8) {
+        this.footstepTimer = 0;
+        this.game.audio.playFootstepRumble?.();
+      }
     }
 
     const pos = this.game.player.getPosition();

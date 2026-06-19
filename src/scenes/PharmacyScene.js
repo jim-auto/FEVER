@@ -9,6 +9,7 @@ import {
 } from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { NurseStreetScene } from './NurseStreetScene.js';
+import { triggerReinterpret } from '../core/Reinterpret.js';
 
 const MEDICINES = {
   antipyretic: { label: '解熱剤', temp: 38.0, status: '患者', cost: '発汗' },
@@ -32,6 +33,9 @@ export class PharmacyScene {
     this.boughtOutside = false;
     this.boughtMedicine = false;
     this.exited = false;
+    this.blockCooldown = 0;
+    this.blockCount = 0;
+    this.reinterpreted = false;
   }
 
   load() {
@@ -185,7 +189,22 @@ export class PharmacyScene {
   checkCollision(pos) {
     const dist = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
     if (dist > 3.6) return false;
-    if (!this.boughtOutside && pos.z > 2.8) return false;
+    if (!this.boughtOutside && pos.z > 2.8) {
+      if (this.blockCooldown <= 0) {
+        this.blockCooldown = 2.5;
+        this.blockCount += 1;
+        this.game.ui.showSubtitle({
+          speaker: '薬剤師',
+          audio: '「外へは、商品として購入ください」',
+          duration: 3500,
+        });
+        if (this.blockCount >= 3 && !this.reinterpreted) {
+          this.reinterpreted = true;
+          triggerReinterpret(this.game, 'pharmacy');
+        }
+      }
+      return false;
+    }
     return true;
   }
 
@@ -246,17 +265,13 @@ export class PharmacyScene {
   }
 
   update(dt) {
+    this.blockCooldown = Math.max(0, this.blockCooldown - dt);
     this.shelfAngle += dt * 0.15;
     this.shelfGroup.rotation.y = this.shelfAngle;
 
     const pos = this.game.player.getPosition();
     if (!this.boughtOutside && pos.z > 2.2 && !this.game.state.hasFlag('pharmacy_blocked')) {
       this.game.state.addFlag('pharmacy_blocked');
-      this.game.ui.showSubtitle({
-        speaker: '薬剤師',
-        audio: '「外へは、商品として購入ください」',
-        duration: 3500,
-      });
     }
 
     const nearest = this.getNearestInteractable(pos);

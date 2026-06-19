@@ -521,3 +521,76 @@ body {
   animation: none !important;
   transition-duration: 0.01ms !important;
 }
+
+/* タッチ操作（モバイル） */
+.touch-controls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .touch-controls {
+    display: block;
+  }
+
+  .body-actions-hud {
+    display: none;
+  }
+}
+
+.touch-joystick {
+  position: fixed;
+  bottom: 2rem;
+  left: 1.5rem;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(10, 12, 14, 0.45);
+  border: 1px solid rgba(244, 246, 240, 0.12);
+  z-index: 150;
+}
+
+.touch-joystick__knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  background: rgba(244, 246, 240, 0.2);
+  border: 1px solid rgba(244, 246, 240, 0.25);
+  pointer-events: none;
+}
+
+.touch-look {
+  position: fixed;
+  inset: 0;
+  right: 30%;
+  z-index: 40;
+}
+
+.touch-buttons {
+  position: fixed;
+  bottom: 2rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 150;
+}
+
+.touch-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(10, 12, 14, 0.55);
+  border: 1px solid rgba(244, 246, 240, 0.2);
+  color: rgba(244, 246, 240, 0.75);
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.touch-btn:active {
+  background: rgba(244, 246, 240, 0.15);
+}

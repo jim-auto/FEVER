@@ -9,6 +9,7 @@ import {
 } from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { PharmacyScene } from './PharmacyScene.js';
+import { triggerReinterpret } from '../core/Reinterpret.js';
 
 const CROSSWALK_Z = 0;
 const BLOCK_Z = -0.3;
@@ -27,6 +28,8 @@ export class CrosswalkScene {
     this.crosswalkStripes = [];
     this.scheduleState = 'red';
     this.blockCooldown = 0;
+    this.blockCount = 0;
+    this.reinterpreted = false;
     this.feverAttempted = false;
     this.demoPhase = 0;
     this.demoTimer = 0;
@@ -389,6 +392,7 @@ export class CrosswalkScene {
     if (!this.canCross() && pos.z > BLOCK_Z) {
       if (this.blockCooldown <= 0) {
         this.blockCooldown = 2;
+        this.blockCount += 1;
         this.game.audio.playCrosswalkDeny();
         this.game.ui.showSubtitle({
           speaker: '信号機',
@@ -397,6 +401,10 @@ export class CrosswalkScene {
         });
         if (!this.feverAttempted) {
           this.tryFeverExcuse();
+        }
+        if (this.blockCount >= 5 && !this.reinterpreted) {
+          this.reinterpreted = true;
+          triggerReinterpret(this.game, 'crosswalk');
         }
       }
       return false;

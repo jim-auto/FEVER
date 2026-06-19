@@ -320,6 +320,22 @@ export class AudioManager {
     this.playHospitalMotif(0.6);
   }
 
+  playFootstepRumble() {
+    if (!this.initialized || this.muted) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(40, t);
+    osc.frequency.exponentialRampToValueAtTime(25, t + 0.2);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.06 * (this.reduced ? 0.5 : 1), t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(g).connect(this.master);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  }
+
   update(dt, state, body) {
     if (!this.initialized || this.muted) return;
 

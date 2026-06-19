@@ -9,6 +9,7 @@ import {
 } from '../world/environment.js';
 import { createTextSprite, updateTextSprite } from '../world/textLabels.js';
 import { CrosswalkScene } from './CrosswalkScene.js';
+import { triggerReinterpret } from '../core/Reinterpret.js';
 
 const LANDINGS = [
   { floor: '4.0', y: 6, zCenter: 0, zRange: [-1.2, 1.2] },
@@ -33,6 +34,8 @@ export class StairsScene {
     this.handrailCooled = false;
     this.waterUsed = 0;
     this.blockedMsgCooldown = 0;
+    this.blockCount = 0;
+    this.reinterpreted = false;
   }
 
   load() {
@@ -259,7 +262,12 @@ export class StairsScene {
     if (!canAccessFloor(this.game.state.temperature, required)) {
       if (this.blockedMsgCooldown <= 0) {
         this.blockedMsgCooldown = 2.5;
+        this.blockCount += 1;
         this.showBlockedMessage(required);
+        if (this.blockCount >= 4 && !this.reinterpreted) {
+          this.reinterpreted = true;
+          triggerReinterpret(this.game, 'stairs');
+        }
       }
       return false;
     }
