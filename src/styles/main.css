@@ -387,6 +387,136 @@ body {
 .fever-tint.layer-heat { background: rgba(232, 180, 168, 0.15); opacity: 1; }
 .fever-tint.layer-white { background: rgba(244, 246, 240, 0.1); opacity: 1; }
 
+/* 周辺視野が鮮明 — 発熱の視覚 */
+.fever-vision {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 1.5s;
+  background: radial-gradient(
+    circle at center,
+    transparent 18%,
+    rgba(10, 12, 14, 0) 35%,
+    rgba(10, 12, 14, 0.55) 100%
+  );
+  backdrop-filter: blur(0px);
+}
+
+.fever-vision.layer-chill {
+  opacity: 0.35;
+  backdrop-filter: blur(0.5px);
+}
+
+.fever-vision.layer-heat {
+  opacity: 0.5;
+  backdrop-filter: blur(1px);
+  background: radial-gradient(
+    circle at center,
+    transparent 12%,
+    rgba(10, 12, 14, 0) 28%,
+    rgba(40, 20, 15, 0.45) 100%
+  );
+}
+
+.fever-vision.layer-white {
+  opacity: 0.65;
+  backdrop-filter: blur(1.5px);
+  background: radial-gradient(
+    circle at center,
+    transparent 8%,
+    rgba(10, 12, 14, 0) 22%,
+    rgba(30, 30, 35, 0.6) 100%
+  );
+}
+
+.scene-fade {
+  position: fixed;
+  inset: 0;
+  background: #0a0c0e;
+  z-index: 400;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.scene-fade.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.choice-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 12, 0.88);
+  z-index: 280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+
+.choice-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.choice-dialog {
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.choice-dialog .question {
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 1.75rem;
+  color: rgba(244, 246, 240, 0.75);
+  line-height: 1.7;
+}
+
+.choice-dialog .choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.choice-btn {
+  background: transparent;
+  border: 1px solid rgba(244, 246, 240, 0.2);
+  color: var(--color-fluorescent);
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.choice-btn:hover {
+  background: rgba(244, 246, 240, 0.08);
+  border-color: rgba(244, 246, 240, 0.4);
+}
+
+.ending-screen .ending-title {
+  font-size: 1.1rem;
+  letter-spacing: 0.35em;
+  color: var(--color-peach);
+  margin-bottom: 1.5rem;
+}
+
+.ending-screen .ending-epilogue {
+  max-width: 480px;
+  font-size: 0.88rem;
+  line-height: 1.85;
+  color: rgba(244, 246, 240, 0.6);
+  margin-bottom: 2.5rem;
+  padding: 0 1rem;
+}
+
 .reduced-motion * {
   animation: none !important;
   transition-duration: 0.01ms !important;

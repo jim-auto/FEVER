@@ -34,6 +34,8 @@ export class UIManager {
       <div class="objective-display">${this.state.objective}</div>
       <div class="thermometer-hud"><span class="temp-value">40.2</span><span class="unit">°C</span></div>
       <div class="fever-tint layer-white" id="fever-tint"></div>
+      <div class="fever-vision" id="fever-vision"></div>
+      <div class="scene-fade" id="scene-fade"></div>
       <div class="patient-ticket" id="patient-ticket"></div>
       <div class="subtitle-bar" id="subtitle-bar"></div>
       <div class="interaction-prompt" id="interaction-prompt"></div>
@@ -61,6 +63,9 @@ export class UIManager {
       <div class="phone-overlay" id="phone-overlay">
         <div class="phone-dialog" id="phone-dialog"></div>
       </div>
+      <div class="choice-overlay interactive" id="choice-overlay">
+        <div class="choice-dialog" id="choice-dialog"></div>
+      </div>
       <div class="start-screen interactive" id="start-screen">
         <h1>FEVER</h1>
         <p class="tagline">病院へ行く</p>
@@ -77,6 +82,11 @@ export class UIManager {
     this.phoneDialog = this.root.querySelector('#phone-dialog');
     this.startScreen = this.root.querySelector('#start-screen');
     this.feverTint = this.root.querySelector('#fever-tint');
+    this.feverVision = this.root.querySelector('#fever-vision');
+    this.sceneFade = this.root.querySelector('#scene-fade');
+    this.objectiveEl = this.root.querySelector('.objective-display');
+    this.choiceEl = this.root.querySelector('#choice-overlay');
+    this.choiceDialog = this.root.querySelector('#choice-dialog');
     this.tempEl = this.root.querySelector('.temp-value');
 
     this.bindA11y();
@@ -93,6 +103,9 @@ export class UIManager {
       this.root.querySelector(id).addEventListener('change', (e) => {
         this.a11y[key] = e.target.checked;
         document.body.classList.toggle('reduced-motion', this.a11y.reducedMotion);
+        if (this.a11y.reducedMotion) {
+          this.feverVision.style.opacity = '0';
+        }
         if (key === 'reducedTint') {
           this.feverTint.style.opacity = e.target.checked ? '0.3' : '';
         }
@@ -135,6 +148,14 @@ export class UIManager {
 
   updateFeverLayer(layer) {
     this.feverTint.className = `fever-tint layer-${layer}`;
+    this.feverVision.className = `fever-vision layer-${layer}`;
+  }
+
+  hideObjective() {
+    if (this.objectiveEl) {
+      this.objectiveEl.style.opacity = '0';
+      this.objectiveEl.style.transition = 'opacity 2s';
+    }
   }
 
   showSubtitle({ speaker, audio, text, duration = 4000 }) {
@@ -186,5 +207,55 @@ export class UIManager {
 
   wait(ms) {
     return new Promise((r) => setTimeout(r, ms));
+  }
+
+  fadeOut(ms = 600) {
+    return new Promise((resolve) => {
+      this.sceneFade.classList.add('active');
+      setTimeout(resolve, ms);
+    });
+  }
+
+  fadeIn(ms = 600) {
+    return new Promise((resolve) => {
+      this.sceneFade.classList.remove('active');
+      setTimeout(resolve, ms);
+    });
+  }
+
+  showChoiceDialog(question, options) {
+    return new Promise((resolve) => {
+      this.choiceDialog.innerHTML = `
+        <p class="question">${question}</p>
+        <div class="choices">
+          ${options.map((o) =>
+            `<button class="choice-btn" data-id="${o.id}">${o.label}</button>`,
+          ).join('')}
+        </div>
+      `;
+      this.choiceEl.classList.add('active');
+      this.choiceDialog.querySelectorAll('.choice-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          this.choiceEl.classList.remove('active');
+          resolve(btn.dataset.id);
+        });
+      });
+    });
+  }
+
+  showEnding({ title, epilogue }) {
+    const overlay = document.createElement('div');
+    overlay.className = 'start-screen interactive ending-screen';
+    overlay.innerHTML = `
+      <h1>FEVER</h1>
+      <p class="ending-title">${title}</p>
+      <p class="ending-epilogue">${epilogue}</p>
+      <button id="restart-btn">最初から</button>
+      <p class="note">病院へ行く</p>
+    `;
+    document.getElementById('ui-root').appendChild(overlay);
+    overlay.querySelector('#restart-btn').addEventListener('click', () => {
+      location.reload();
+    });
   }
 }

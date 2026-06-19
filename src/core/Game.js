@@ -123,8 +123,20 @@ export class Game {
   }
 
   changeScene(SceneClass) {
-    this.clearSceneCallbacks();
-    this.loadScene(new SceneClass(this));
+    this.transitionTo(() => {
+      this.clearSceneCallbacks();
+      this.loadScene(new SceneClass(this));
+    });
+  }
+
+  async transitionTo(fn) {
+    if (this.ui.a11y.reducedMotion) {
+      fn();
+      return;
+    }
+    await this.ui.fadeOut(550);
+    fn();
+    await this.ui.fadeIn(550);
   }
 
   clearSceneCallbacks() {

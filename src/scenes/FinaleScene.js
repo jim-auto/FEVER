@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { applyAtmosphere, clearAtmosphere, createMaterialSet } from '../world/environment.js';
+import { RECEPTION_CHOICES } from '../data/endings.js';
 
 /**
- * MVP フィナーレ — 歩行病院の目撃
+ * フィナーレ — 歩行病院 → 受付の問い
  */
 export class FinaleScene {
   static audioPreset = 'finale';
@@ -39,16 +40,6 @@ export class FinaleScene {
     );
     ground.rotation.x = -Math.PI / 2;
     this.group.add(ground);
-
-    for (let i = 0; i < 12; i++) {
-      const h = 3 + Math.random() * 6;
-      const pole = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, h, 0.15),
-        this.materials.concrete,
-      );
-      pole.position.set(-10 + i * 2, h / 2, -8 - Math.random() * 3);
-      this.group.add(pole);
-    }
   }
 
   buildHospital() {
@@ -84,10 +75,7 @@ export class FinaleScene {
   async runSequence() {
     const { ui } = this.game;
     await ui.wait(1000);
-    ui.showSubtitle({
-      audio: 'あれが、病院だ。',
-      duration: 3000,
-    });
+    ui.showSubtitle({ audio: 'あれが、病院だ。', duration: 3000 });
     await ui.wait(2500);
     this.phase = 1;
   }
@@ -106,8 +94,8 @@ export class FinaleScene {
 
     await ui.wait(2000);
     this.phase = 3;
-
     await ui.wait(4000);
+
     this.game.audio.playPhoneRing();
     await ui.showPhoneDialog([
       { text: '（電話が鳴る）', pause: 1200 },
@@ -117,28 +105,42 @@ export class FinaleScene {
       { text: '「それはこちらでは確認できません」', pause: 2200 },
     ]);
 
-    this.showEnding();
+    await this.showReceptionQuestion();
   }
 
-  showEnding() {
+  async showReceptionQuestion() {
+    const { ui } = this.game;
+    ui.showSubtitle({
+      speaker: '受付',
+      audio: '「本日、どの部分が来院しましたか」',
+      duration: 5000,
+    });
+    await ui.wait(1500);
+
+    const choice = await ui.showChoiceDialog(
+      '本日、どの部分が来院しましたか',
+      RECEPTION_CHOICES.map((c) => ({ id: c.id, label: c.label })),
+    );
+
+    const ending = RECEPTION_CHOICES.find((c) => c.id === choice);
+    if (ending) this.applyEnding(ending);
+  }
+
+  applyEnding(ending) {
     if (this.ended) return;
     this.ended = true;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'start-screen interactive';
-    overlay.innerHTML = `
-      <h1>FEVER</h1>
-      <p class="tagline">病院へ行く</p>
-      <p style="margin-bottom:2rem;font-size:0.85rem;color:rgba(244,246,240,0.5);letter-spacing:0.15em;">
-        MVP — 45分縦切りデモ（未完続き）
-      </p>
-      <button id="restart-btn">最初から</button>
-      <p class="note">世界は、正常には戻らない</p>
-    `;
-    document.getElementById('ui-root').appendChild(overlay);
-    overlay.querySelector('#restart-btn').addEventListener('click', () => {
-      location.reload();
-    });
+    const { state, ui } = this.game;
+    Object.assign(state.patientTicket, ending.ticket);
+    if (ending.ticket.temperature === '分離') {
+      state.setTemperature(37.0);
+      state.patientTicket.temperature = 37.0;
+    }
+    ui.updatePatientTicket();
+    if (ending.hideObjective) ui.hideObjective();
+
+    this.game.audio.playHospitalMotif(0.8);
+    ui.showEnding({ title: ending.label, epilogue: ending.epilogue });
   }
 
   checkCollision(pos) {
@@ -147,23 +149,13 @@ export class FinaleScene {
 
   update(dt) {
     this.phaseTimer += dt;
-
-    if (this.phase === 1) {
-      const pos = this.game.player.getPosition();
-      if (pos.z < 0) {
-        this.onHospitalApproach();
-      }
+    if (this.phase === 1 && this.game.player.getPosition().z < 0) {
+      this.onHospitalApproach();
     }
-
     if (this.phase >= 3 && this.hospitalGroup) {
       this.hospitalGroup.position.x += dt * 2;
       this.hospitalGroup.position.z += dt * 3;
       this.hospitalGroup.rotation.y += dt * 0.08;
-      for (const child of this.hospitalGroup.children) {
-        if (child.geometry?.type === 'BoxGeometry' && child.position.y > 2) {
-          child.position.y = 2.5 + Math.sin(this.phaseTimer * 4) * 0.1;
-        }
-      }
     }
   }
 
