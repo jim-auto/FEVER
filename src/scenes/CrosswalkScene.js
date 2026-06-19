@@ -6,6 +6,8 @@ import {
   createMaterialSet,
   createInteractableMesh,
   addStreetBuildings,
+  addHospitalWingBuildings,
+  addHospitalCorridorDecor,
 } from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { PharmacyScene } from './PharmacyScene.js';
@@ -53,12 +55,22 @@ export class CrosswalkScene {
       scope: 'local',
     }));
 
-    state.patientTicket.location = '赤い予定交差点';
+    state.patientTicket.location = '外来トリアージ交差点';
     state.patientTicket.appointment = '赤';
     ui.updatePatientTicket();
 
     this.buildIntersection();
-    addStreetBuildings(this.group, this.materials);
+    addHospitalWingBuildings(this.group, this.materials);
+    addHospitalCorridorDecor(this.group, this.materials, {
+      lightSpan: 20,
+      signs: [
+        { text: '← 外来受付', x: -4.2, y: 2.8, z: -6 },
+        { text: 'トリアージ →', x: 4.2, y: 2.8, z: -6 },
+        { text: '街＝病院', x: 0, y: 3.4, z: -8, scale: 1.1 },
+      ],
+      benches: [{ x: -1, z: -5.5 }, { x: 2, z: -5.2 }],
+      ivPoles: [{ x: -3.5, z: -4.5 }],
+    });
     this.buildInteractables();
     this.buildNPCs();
 
@@ -74,11 +86,23 @@ export class CrosswalkScene {
 
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(roadW, roadD),
-      this.materials.asphalt,
+      this.materials.vinylFloor,
     );
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0, 0);
     this.group.add(road);
+
+    const shoulderL = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.2, roadD),
+      this.materials.clinicalGreen,
+    );
+    shoulderL.rotation.x = -Math.PI / 2;
+    shoulderL.position.set(-roadW / 2 + 0.6, 0.008, 0);
+    this.group.add(shoulderL);
+
+    const shoulderR = shoulderL.clone();
+    shoulderR.position.x = roadW / 2 - 0.6;
+    this.group.add(shoulderR);
 
     for (let i = -3; i <= 3; i++) {
       const stripe = new THREE.Mesh(
@@ -93,7 +117,7 @@ export class CrosswalkScene {
 
     const sidewalkS = new THREE.Mesh(
       new THREE.PlaneGeometry(roadW, 6),
-      this.materials.concrete,
+      this.materials.vinylFloor,
     );
     sidewalkS.rotation.x = -Math.PI / 2;
     sidewalkS.position.set(0, 0.01, -6);
@@ -101,7 +125,7 @@ export class CrosswalkScene {
 
     const sidewalkN = new THREE.Mesh(
       new THREE.PlaneGeometry(roadW, 6),
-      this.materials.concrete,
+      this.materials.vinylFloor,
     );
     sidewalkN.rotation.x = -Math.PI / 2;
     sidewalkN.position.set(0, 0.01, 6);
@@ -221,7 +245,13 @@ export class CrosswalkScene {
     const { ui } = this.game;
     await ui.wait(1000);
     ui.showSubtitle({
-      audio: '交差点。信号機が、予定表を審査している。',
+      audio: 'ここは街のはずだ。床はビニール、天井は蛍光灯、案内板は全部「受付」系だ。',
+      duration: 5000,
+    });
+    await ui.wait(4500);
+    ui.showSubtitle({
+      speaker: '——',
+      audio: '交差点はトリアージ。信号機が、予定表を審査している。',
       duration: 4500,
     });
     await ui.wait(4000);
@@ -232,9 +262,9 @@ export class CrosswalkScene {
     this.officeWorkerPhase = 'approach';
     this.demoPhase = 1;
     this.game.ui.showSubtitle({
-      speaker: '会社員',
-      audio: '「遅刻する——予定が赤くなった」',
-      duration: 3500,
+      speaker: '通行者',
+      audio: '「外来の混雑で、横断歩道が塞がる日もあるらしいですよ」',
+      duration: 4000,
     });
     this.game.state.getRule('red_schedule')?.demonstrate();
   }
@@ -246,9 +276,9 @@ export class CrosswalkScene {
         this.officeWorkerPhase = 'blocked';
         this.officeWorker.position.z = CROSSWALK_Z - 0.8;
         this.game.ui.showSubtitle({
-          speaker: '信号機',
-          audio: '「赤い予定は渡れません」',
-          duration: 3500,
+          speaker: 'トリアージ',
+          audio: '「赤い予定は渡れません。色を変えるか、緊急として再分類してください」',
+          duration: 4000,
         });
         this.officeWorkerPhase = 'retreat';
       }

@@ -153,7 +153,7 @@ export class StairsScene {
     const npc = createInteractableMesh(
       new THREE.CylinderGeometry(0.25, 0.25, 1.6, 8),
       this.materials.plasticWhite,
-      { id: 'resident', label: '住民に話しかける' },
+      { id: 'resident', label: '病区住民に話す' },
     );
     npc.position.set(-0.6, 6.8, -0.4);
     this.group.add(npc);
@@ -174,10 +174,10 @@ export class StairsScene {
   }
 
   async runIntro() {
-    await this.game.ui.wait(800);
+    await this.game.ui.wait(4200);
     this.game.ui.showSubtitle({
-      audio: '集合住宅の階段。案内板の数字が、小数点つきだ。',
-      duration: 4500,
+      audio: '集合住宅の階段——いや、病棟の階段。案内板の数字が、小数点つきだ。',
+      duration: 4800,
     });
     await this.game.ui.wait(3500);
     this.game.ui.showSubtitle({
@@ -320,9 +320,9 @@ export class StairsScene {
     if (id === 'resident') {
       this.npcTalked = true;
       ui.showSubtitle({
-        speaker: '住民',
-        audio: '「今日は4.0階が混んでいる。3.9なら空いてるよ」',
-        duration: 4500,
+        speaker: '病区住民',
+        audio: '「今日は4.0階が混んでいる。3.9なら空いてるよ——体温、下げてからね」',
+        duration: 4800,
       });
       this.game.state.getRule('decimal_floor')?.demonstrate();
       return;

@@ -6,6 +6,7 @@ import {
   createMaterialSet,
   createInteractableMesh,
   addPharmacyDecor,
+  addHospitalCorridorDecor,
 } from '../world/environment.js';
 import { createTextSprite } from '../world/textLabels.js';
 import { NurseStreetScene } from './NurseStreetScene.js';
@@ -51,11 +52,21 @@ export class PharmacyScene {
       scope: 'local',
     }));
 
-    state.patientTicket.location = '移動薬局「さむけ」';
+    state.patientTicket.location = '移動薬局「さむけ」·外来';
     ui.updatePatientTicket();
 
     this.buildPharmacy();
     addPharmacyDecor(this.group, this.materials);
+    addHospitalCorridorDecor(this.group, this.materials, {
+      lightSpan: 8,
+      lightY: 2.8,
+      lightStep: 2.5,
+      signs: [
+        { text: '調剤', x: -2.8, y: 2.3, z: -2.5 },
+        { text: '商品：出口', x: 2.5, y: 2.3, z: -2.2 },
+      ],
+      ivPoles: [{ x: -1.5, z: 0.5 }],
+    });
     this.game.player.setPosition(0, 1.55, 0);
     this.game.player.enable();
     this.runIntro();
@@ -136,14 +147,14 @@ export class PharmacyScene {
   async runIntro() {
     await this.game.ui.wait(800);
     this.game.ui.showSubtitle({
-      audio: '薬局の棚が、ゆっくり自分の周りを回っている。',
-      duration: 4000,
+      audio: '薬局の棚が、ゆっくり自分の周りを回っている。ここも病院の一部だ。',
+      duration: 4500,
     });
     await this.game.ui.wait(3500);
     this.game.ui.showSubtitle({
       speaker: '薬剤師',
-      audio: '「出口をご希望の方は、商品棚をご確認ください」',
-      duration: 4500,
+      audio: '「出口をご希望の方は、商品棚をご確認ください。外来の方も同じ手順です」',
+      duration: 4800,
     });
     this.game.state.getRule('pharmacy_exit')?.demonstrate();
     this.game.ui.setObjective('正面の「外」を買う → 出口');

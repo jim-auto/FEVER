@@ -8,6 +8,7 @@ import {
   createSkyGradientTexture,
   createWindowCityTexture,
 } from './textures.js';
+import { createTextSprite } from './textLabels.js';
 
 let tracked = [];
 
@@ -46,12 +47,12 @@ const PRESETS = {
     main: { color: 0xf4f6f0, intensity: 0.5, pos: [0, 8, 4] },
   },
   crosswalk: {
-    sky: ['#607080', '#8898a8'],
-    fog: { color: 0x788898, near: 14, far: 45 },
-    ambient: 0xd8dce8,
-    ambientIntensity: 0.45,
-    hemi: { sky: 0xa0b0c8, ground: 0x404850, intensity: 0.55 },
-    main: { color: 0xfff4e8, intensity: 0.65, pos: [-5, 12, 3] },
+    sky: ['#c8d9cc', '#d8e0e8'],
+    fog: { color: 0xd0dce4, near: 10, far: 42 },
+    ambient: 0xf0f4f0,
+    ambientIntensity: 0.52,
+    hemi: { sky: 0xc8d9cc, ground: 0xb0b8c0, intensity: 0.62 },
+    main: { color: 0xf4f6f0, intensity: 0.72, pos: [0, 10, 2] },
   },
   crosswalk_sunset: {
     sky: ['#4a5060', '#806060'],
@@ -70,12 +71,12 @@ const PRESETS = {
     main: { color: 0xffffff, intensity: 0.55, pos: [0, 5, 2] },
   },
   nurse: {
-    sky: ['#505860', '#687078'],
-    fog: { color: 0x606870, near: 10, far: 38 },
-    ambient: 0xc8d0d8,
-    ambientIntensity: 0.35,
-    hemi: { sky: 0x909aa8, ground: 0x383c44, intensity: 0.5 },
-    main: { color: 0xfff0e8, intensity: 0.55, pos: [6, 15, 4] },
+    sky: ['#b8c8d8', '#d0d8e0'],
+    fog: { color: 0xc0c8d0, near: 8, far: 36 },
+    ambient: 0xe8f0ec,
+    ambientIntensity: 0.48,
+    hemi: { sky: 0xc8d9cc, ground: 0xa0a8b0, intensity: 0.58 },
+    main: { color: 0xf4f6f0, intensity: 0.68, pos: [0, 12, 4] },
   },
   finale: {
     sky: ['#708090', '#a0a8b0'],
@@ -357,6 +358,122 @@ export function addStreetBuildings(group, materials) {
   puddle.rotation.x = -Math.PI / 2;
   puddle.position.set(-1.5, 0.015, -4);
   group.add(puddle);
+}
+
+/** 街＝病院 — 病棟棟・外来棟の外観 */
+export function addHospitalWingBuildings(group, materials) {
+  const configs = [
+    { x: -7, z: -4, w: 3, h: 12, d: 4, wing: '外来A' },
+    { x: -7.5, z: 4, w: 2.5, h: 8, d: 3.5, wing: '待合' },
+    { x: 7, z: -2, w: 3.5, h: 15, d: 4, wing: '病棟B' },
+    { x: 6.5, z: 5, w: 2.8, h: 10, d: 3, wing: '処置' },
+  ];
+
+  for (const c of configs) {
+    const b = new THREE.Mesh(
+      new THREE.BoxGeometry(c.w, c.h, c.d),
+      materials.plasticWhite,
+    );
+    b.position.set(c.x, c.h / 2, c.z);
+    group.add(b);
+
+    const stripe = new THREE.Mesh(
+      new THREE.BoxGeometry(c.w + 0.02, 0.12, c.d + 0.02),
+      materials.clinicalGreen,
+    );
+    stripe.position.set(c.x, c.h * 0.72, c.z);
+    group.add(stripe);
+
+    const sign = createTextSprite(c.wing, {
+      fontSize: 32,
+      width: 180,
+      height: 64,
+      bgColor: 'rgba(200, 217, 204, 0.95)',
+      color: '#2a4048',
+    });
+    sign.position.set(c.x, c.h * 0.55, c.z + c.d / 2 + 0.08);
+    sign.scale.set(0.9, 0.4, 1);
+    group.add(sign);
+  }
+
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 5, 6), materials.plasticWhite);
+  pole.position.set(-4.5, 2.5, -3);
+  group.add(pole);
+}
+
+/** 街路を外来廊下化 — 天井灯・案内板・待合ベンチ */
+export function addHospitalCorridorDecor(group, materials, options = {}) {
+  const {
+    lightSpan = 18,
+    lightStep = 3.5,
+    lightY = 3.4,
+    signs = [],
+    benches = [],
+    ivPoles = [],
+  } = options;
+
+  for (let z = -lightSpan / 2; z <= lightSpan / 2; z += lightStep) {
+    addFluorescent(group, materials, 0, lightY, z, 1.4, Math.PI / 2);
+  }
+
+  const centerLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.15, lightSpan),
+    new THREE.MeshStandardMaterial({
+      color: 0xc8d9cc,
+      emissive: 0xa8c0b0,
+      emissiveIntensity: 0.15,
+      roughness: 0.8,
+    }),
+  );
+  centerLine.rotation.x = -Math.PI / 2;
+  centerLine.position.y = 0.018;
+  group.add(centerLine);
+
+  for (const { text, x, y, z, scale = 1 } of signs) {
+    const sign = createTextSprite(text, {
+      fontSize: 30,
+      width: 300,
+      height: 80,
+      bgColor: 'rgba(232, 226, 212, 0.95)',
+      color: '#3a4850',
+    });
+    sign.position.set(x, y, z);
+    sign.scale.set(scale, scale * 0.42, 1);
+    group.add(sign);
+  }
+
+  for (const { x, z } of benches) {
+    const bench = new THREE.Mesh(
+      new THREE.BoxGeometry(1.1, 0.45, 0.4),
+      materials.plasticWhite,
+    );
+    bench.position.set(x, 0.22, z);
+    group.add(bench);
+    const num = createTextSprite('待', {
+      fontSize: 28,
+      width: 80,
+      height: 64,
+      bgColor: 'rgba(200, 217, 204, 0.9)',
+    });
+    num.position.set(x, 0.65, z);
+    num.scale.set(0.35, 0.2, 1);
+    group.add(num);
+  }
+
+  for (const { x, z } of ivPoles) {
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.03, 1.8, 6),
+      materials.plasticWhite,
+    );
+    pole.position.set(x, 0.9, z);
+    group.add(pole);
+    const bag = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.18, 0.06),
+      materials.glass,
+    );
+    bag.position.set(x, 1.5, z);
+    group.add(bag);
+  }
 }
 
 export function addNurseStreetSkyline(group, materials) {

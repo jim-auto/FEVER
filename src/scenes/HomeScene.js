@@ -314,7 +314,7 @@ export class HomeScene {
   async exitRoom() {
     const { ui } = this.game;
     ui.showSubtitle({
-      audio: '自宅を出た。隣の集合住宅へ。',
+      audio: '自宅を出た。外ではなく、病棟の廊下へ。',
       duration: 3000,
     });
     await ui.wait(2500);

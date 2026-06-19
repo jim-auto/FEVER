@@ -3,7 +3,7 @@ import {
   applyAtmosphere,
   clearAtmosphere,
   createMaterialSet,
-  addStreetBuildings,
+  addHospitalCorridorDecor,
 } from '../world/environment.js';
 import { getReceptionChoices, resolveEnding } from '../data/endings.js';
 
@@ -28,7 +28,7 @@ export class FinaleScene {
     applyAtmosphere(scene, 'finale');
     scene.add(this.group);
 
-    state.patientTicket.location = '病院が見える広場';
+    state.patientTicket.location = '病院中庭·外来広場';
     ui.updatePatientTicket();
 
     this.buildPlaza();
@@ -41,12 +41,20 @@ export class FinaleScene {
   buildPlaza() {
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(30, 30),
-      this.materials.asphalt,
+      this.materials.vinylFloor,
     );
     ground.rotation.x = -Math.PI / 2;
     this.group.add(ground);
 
-    addStreetBuildings(this.group, this.materials);
+    addHospitalCorridorDecor(this.group, this.materials, {
+      lightSpan: 24,
+      lightY: 4,
+      signs: [
+        { text: '中庭', x: 0, y: 3.2, z: 2, scale: 1.2 },
+        { text: '← 外来', x: -5, y: 2.8, z: 0 },
+      ],
+      benches: [{ x: -3, z: 3 }, { x: 3, z: 2 }],
+    });
 
     const bench = new THREE.Mesh(
       new THREE.BoxGeometry(1.4, 0.45, 0.45),
@@ -93,7 +101,7 @@ export class FinaleScene {
   async runSequence() {
     const { ui } = this.game;
     await ui.wait(1000);
-    ui.showSubtitle({ audio: 'あれが、病院だ。', duration: 3000 });
+    ui.showSubtitle({ audio: 'あれが、病院だ——街の先端に、受付が歩いている。', duration: 3500 });
     await ui.wait(2500);
     this.phase = 1;
   }

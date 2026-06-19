@@ -6,6 +6,7 @@ import {
   createMaterialSet,
   createInteractableMesh,
   addNurseStreetSkyline,
+  addHospitalCorridorDecor,
 } from '../world/environment.js';
 import { FinaleScene } from './FinaleScene.js';
 import { triggerReinterpret } from '../core/Reinterpret.js';
@@ -44,11 +45,21 @@ export class NurseStreetScene {
       scope: 'local',
     }));
 
-    state.patientTicket.location = '巨大看護師通り';
+    state.patientTicket.location = '病院回廊·看護師通り';
     ui.updatePatientTicket();
 
     this.buildStreet();
     addNurseStreetSkyline(this.group, this.materials);
+    addHospitalCorridorDecor(this.group, this.materials, {
+      lightSpan: 36,
+      lightY: 3.6,
+      lightStep: 4,
+      signs: [
+        { text: '← 病棟', x: -3.2, y: 2.6, z: 2 },
+        { text: '回廊 →', x: 3.2, y: 2.6, z: -8 },
+      ],
+      benches: [{ x: -3.5, z: -2 }, { x: -3.5, z: -12 }],
+    });
     this.buildGiantNurse();
     this.game.player.setPosition(0, 1.55, 8);
     this.game.player.enable();
@@ -58,7 +69,7 @@ export class NurseStreetScene {
   buildStreet() {
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(8, 40),
-      this.materials.asphalt,
+      this.materials.vinylFloor,
     );
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0, -5);
@@ -83,7 +94,7 @@ export class NurseStreetScene {
     const shop = createInteractableMesh(
       new THREE.BoxGeometry(1.5, 1.8, 1.2),
       this.materials.plasticWhite,
-      { id: 'shopkeeper', label: '店員に話しかける' },
+      { id: 'shopkeeper', label: '案内に話す' },
     );
     shop.position.set(-3.5, 0.9, 2);
     this.group.add(shop);
@@ -150,8 +161,8 @@ export class NurseStreetScene {
   async runIntro() {
     await this.game.ui.wait(600);
     this.game.ui.showSubtitle({
-      audio: '看護師の足元だけが、ビルの高さにある。誰も振り返らない。',
-      duration: 4500,
+      audio: '病院の回廊が、街の長さまで伸びている。看護師の足元だけが、ビルの高さにある。',
+      duration: 4800,
     });
     this.nursePhase = 1;
     this.game.ui.setObjective('看護師の影の間を通る');
@@ -212,9 +223,9 @@ export class NurseStreetScene {
   interact(obj) {
     if (obj.userData.id === 'shopkeeper') {
       this.game.ui.showSubtitle({
-        speaker: '店員',
-        audio: '「今日は靴音が遅いですね。影の間を通れば大丈夫ですよ」',
-        duration: 4500,
+        speaker: '案内',
+        audio: '「外来から病棟へは、影の間を通ってください。今日は歩幅が広いです」',
+        duration: 4800,
       });
       this.game.state.getRule('giant_nurse')?.demonstrate();
     }
