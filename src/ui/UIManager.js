@@ -21,6 +21,9 @@ export class UIManager {
       fixedSubtitles: true,
       showTextLayer: true,
       reducedTint: false,
+      reducedAudio: false,
+      muted: false,
+      tinnitus: false,
     };
     this.subtitleTimeout = null;
     this.build();
@@ -50,6 +53,9 @@ export class UIManager {
           <label><input type="checkbox" id="a11y-subtitles" checked /> 固定字幕</label>
           <label><input type="checkbox" id="a11y-text-layer" checked /> 字幕テキスト層</label>
           <label><input type="checkbox" id="a11y-tint" /> 発熱色調を弱める</label>
+          <label><input type="checkbox" id="a11y-audio" /> 環境音を減らす</label>
+          <label><input type="checkbox" id="a11y-mute" /> 環境音をオフ</label>
+          <label><input type="checkbox" id="a11y-tinnitus" /> 耳鳴り（フィナーレ）</label>
         </div>
       </div>
       <div class="phone-overlay" id="phone-overlay">
@@ -99,6 +105,9 @@ export class UIManager {
     bind('#a11y-subtitles', 'fixedSubtitles');
     bind('#a11y-text-layer', 'showTextLayer');
     bind('#a11y-tint', 'reducedTint');
+    bind('#a11y-audio', 'reducedAudio');
+    bind('#a11y-mute', 'muted');
+    bind('#a11y-tinnitus', 'tinnitus');
   }
 
   onStart(callback) {

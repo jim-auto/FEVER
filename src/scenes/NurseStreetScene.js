@@ -13,6 +13,8 @@ import { FinaleScene } from './FinaleScene.js';
  * 巨大看護師通り — 影の間を通過する
  */
 export class NurseStreetScene {
+  static audioPreset = 'nurse';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();

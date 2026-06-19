@@ -20,6 +20,8 @@ const LANDINGS = [
  * 小数点階段 — 階数は体温で表される
  */
 export class StairsScene {
+  static audioPreset = 'stairs';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
@@ -188,6 +190,7 @@ export class StairsScene {
 
   drinkWater() {
     const { state, ui } = this.game;
+    this.game.audio.playWaterDrink();
     const prev = state.temperature;
     state.setTemperature(Math.max(37.0, prev - 0.4));
     this.waterUsed += 1;

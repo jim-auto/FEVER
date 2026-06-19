@@ -17,6 +17,8 @@ const BLOCK_Z = -0.3;
  * 赤い予定交差点 — 赤い予定は横断歩道を渡れない
  */
 export class CrosswalkScene {
+  static audioPreset = 'crosswalk';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
@@ -299,6 +301,7 @@ export class CrosswalkScene {
     this.straightenCrosswalk(1);
     this.signalRed.visible = false;
     this.signalGreen.visible = true;
+    this.game.audio.playWorldAccept();
   }
 
   tryFeverExcuse() {
@@ -362,6 +365,7 @@ export class CrosswalkScene {
     await ui.wait(2000);
     this.isSunset = true;
     applyAtmosphere(this.game.scene, 'crosswalk_sunset');
+    this.game.audio.setPreset('crosswalk_sunset');
     await ui.wait(3000);
     this.scheduleState = 'faded';
     this.game.state.patientTicket.appointment = '判別不能';
@@ -385,6 +389,7 @@ export class CrosswalkScene {
     if (!this.canCross() && pos.z > BLOCK_Z) {
       if (this.blockCooldown <= 0) {
         this.blockCooldown = 2;
+        this.game.audio.playCrosswalkDeny();
         this.game.ui.showSubtitle({
           speaker: '信号機',
           audio: '「赤い予定は渡れません」',

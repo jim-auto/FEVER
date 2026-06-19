@@ -20,6 +20,8 @@ const MEDICINES = {
  * 移動薬局「さむけ」— 出口そのものが商品
  */
 export class PharmacyScene {
+  static audioPreset = 'pharmacy';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();

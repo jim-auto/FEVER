@@ -15,6 +15,8 @@ import { StairsScene } from './StairsScene.js';
  * プロローグ — 発汗する六畳間
  */
 export class HomeScene {
+  static audioPreset = 'home';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
@@ -47,11 +49,8 @@ export class HomeScene {
     this.setupCallbacks();
 
     this.game.player.setPosition(0, 1.55, 0.5);
-
-    this.game.ui.onStart(() => {
-      this.game.player.enable();
-      this.runIntro();
-    });
+    this.game.player.enable();
+    this.runIntro();
   }
 
   buildFurniture() {
@@ -207,6 +206,7 @@ export class HomeScene {
 
   async runPhoneSequence() {
     this.game.player.disable();
+    this.game.audio.playPhoneRing();
     await this.game.ui.showPhoneDialog([
       { text: '（病院へ電話をかける）', pause: 1000 },
       { text: '受付', speaker: true, pause: 800 },

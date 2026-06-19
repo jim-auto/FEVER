@@ -5,6 +5,8 @@ import { applyAtmosphere, clearAtmosphere, createMaterialSet } from '../world/en
  * MVP フィナーレ — 歩行病院の目撃
  */
 export class FinaleScene {
+  static audioPreset = 'finale';
+
   constructor(game) {
     this.game = game;
     this.group = new THREE.Group();
@@ -94,6 +96,7 @@ export class FinaleScene {
     if (this.phase >= 2) return;
     this.phase = 2;
     this.game.player.disable();
+    this.game.audio.playHospitalMotif(1.2);
 
     const { ui } = this.game;
     ui.showSubtitle({
@@ -105,6 +108,7 @@ export class FinaleScene {
     this.phase = 3;
 
     await ui.wait(4000);
+    this.game.audio.playPhoneRing();
     await ui.showPhoneDialog([
       { text: '（電話が鳴る）', pause: 1200 },
       { text: '受付', speaker: true, pause: 800 },

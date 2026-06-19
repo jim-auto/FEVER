@@ -3,6 +3,7 @@ import { createGameSystems } from './RuleEngine.js';
 import { PlayerController } from '../player/PlayerController.js';
 import { BodyActions } from '../player/BodyActions.js';
 import { UIManager } from '../ui/UIManager.js';
+import { AudioManager } from '../audio/AudioManager.js';
 import { HomeScene } from '../scenes/HomeScene.js';
 
 export class Game {
@@ -12,6 +13,7 @@ export class Game {
     this.state = state;
     this.rules = rules;
     this.ui = new UIManager(uiRoot, state);
+    this.audio = new AudioManager();
     this.clock = new THREE.Clock();
     this.currentScene = null;
     this.running = false;
@@ -44,10 +46,24 @@ export class Game {
     this.ui.onA11yChange = (a11y) => {
       this.player.reducedMotion = a11y.reducedMotion;
       this.player.reducedShake = a11y.reducedShake;
+      this.audio.setReduced(a11y.reducedAudio);
+      this.audio.setMuted(a11y.muted);
+      this.audio.setTinnitus(a11y.tinnitus);
     };
 
     window.addEventListener('resize', () => this.onResize());
     this.bindInput();
+    this.bindBodyAudio();
+  }
+
+  bindBodyAudio() {
+    const { audio, body } = this;
+    const origCough = body.cough.bind(body);
+    body.cough = () => {
+      const ok = origCough();
+      if (ok) audio.playCough();
+      return ok;
+    };
   }
 
   bindInput() {
@@ -87,9 +103,12 @@ export class Game {
   }
 
   start() {
-    this.loadScene(new HomeScene(this));
-    this.running = true;
-    this.tick();
+    this.ui.onStart(() => {
+      this.audio.unlock();
+      this.loadScene(new HomeScene(this));
+      this.running = true;
+      this.tick();
+    });
   }
 
   loadScene(scene) {
@@ -97,6 +116,10 @@ export class Game {
     this.currentScene = scene;
     scene.load();
     this.ui.updateFeverLayer(this.state.feverLayer);
+    const preset = scene.constructor.audioPreset;
+    if (preset) {
+      this.audio.setPreset(preset);
+    }
   }
 
   changeScene(SceneClass) {
@@ -127,6 +150,7 @@ export class Game {
 
     const dt = Math.min(this.clock.getDelta(), 0.05);
     this.body.update(dt);
+    this.audio.update(dt, this.state, this.body);
 
     if (this.currentScene) {
       const collisionFn = this.currentScene.checkCollision?.bind(this.currentScene);
