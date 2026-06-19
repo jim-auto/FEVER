@@ -1,6 +1,11 @@
 import * as THREE from 'three';
-import { applyAtmosphere, clearAtmosphere, createMaterialSet } from '../world/environment.js';
-import { RECEPTION_CHOICES } from '../data/endings.js';
+import {
+  applyAtmosphere,
+  clearAtmosphere,
+  createMaterialSet,
+  addStreetBuildings,
+} from '../world/environment.js';
+import { getReceptionChoices, resolveEnding } from '../data/endings.js';
 
 /**
  * フィナーレ — 歩行病院 → 受付の問い
@@ -40,6 +45,19 @@ export class FinaleScene {
     );
     ground.rotation.x = -Math.PI / 2;
     this.group.add(ground);
+
+    addStreetBuildings(this.group, this.materials);
+
+    const bench = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.45, 0.45),
+      this.materials.wood,
+    );
+    bench.position.set(-3, 0.22, 3);
+    this.group.add(bench);
+
+    const lamp = new THREE.PointLight(0xfff0e0, 0.5, 8);
+    lamp.position.set(2, 3.5, 2);
+    this.group.add(lamp);
   }
 
   buildHospital() {
@@ -119,10 +137,11 @@ export class FinaleScene {
 
     const choice = await ui.showChoiceDialog(
       '本日、どの部分が来院しましたか',
-      RECEPTION_CHOICES.map((c) => ({ id: c.id, label: c.label })),
+      getReceptionChoices(this.game.state).map((c) => ({ id: c.id, label: c.label })),
+      { timeoutMs: 24000 },
     );
 
-    const ending = RECEPTION_CHOICES.find((c) => c.id === choice);
+    const ending = resolveEnding(choice);
     if (ending) this.applyEnding(ending);
   }
 
@@ -140,7 +159,11 @@ export class FinaleScene {
     if (ending.hideObjective) ui.hideObjective();
 
     this.game.audio.playHospitalMotif(0.8);
-    ui.showEnding({ title: ending.label, epilogue: ending.epilogue });
+    ui.showEnding({
+      title: ending.id === 'silence' ? '沈黙' : ending.label,
+      epilogue: ending.epilogue,
+      state: this.game.state,
+    });
   }
 
   checkCollision(pos) {

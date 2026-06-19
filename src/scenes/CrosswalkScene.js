@@ -286,6 +286,7 @@ export class CrosswalkScene {
       audio: '……自分の予定表も、赤い。Patient票の「予約時刻」が赤になっている。',
       duration: 5000,
     });
+    this.game.ui.setObjective('渡れない · 左:洗濯 / 右:緊急 / ベンチ');
   }
 
   straightenCrosswalk(t) {
@@ -305,6 +306,7 @@ export class CrosswalkScene {
     this.signalRed.visible = false;
     this.signalGreen.visible = true;
     this.game.audio.playWorldAccept();
+    this.game.ui.resetObjective();
   }
 
   tryFeverExcuse() {
@@ -509,6 +511,7 @@ export class CrosswalkScene {
 
   async exitArea() {
     const { ui } = this.game;
+    ui.resetObjective();
     ui.showSubtitle({
       audio: '横断歩道を渡った。向こう側の街路に、薬局の看板が見える。',
       duration: 3500,

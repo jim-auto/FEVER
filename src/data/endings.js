@@ -31,4 +31,45 @@ export const RECEPTION_CHOICES = [
     epilogue: '自分は患者ではなく、付き添いとして残った。誰か——まだ見ぬ自分——が治療を受けている。待合室の椅子が、少し温かい。',
     ticket: { status: '付き添い', location: '待合室' },
   },
+  {
+    id: 'appointment',
+    label: '予約時刻',
+    epilogue: '予約票だけが先に回診室へ入った。自分は待合で番号を呼ばれるが、時刻の欄はずっと空白のままだ。',
+    ticket: { appointment: '先着', location: '待合・番号待ち' },
+  },
+  {
+    id: 'reason',
+    label: '来院理由',
+    epilogue: '「発熱」という言葉だけが診察室に運ばれた。身体は外に置き去りにされ、理由だけがベッドに横たわっている。',
+    ticket: { reason: '分離', status: '理由のみ' },
+  },
 ];
+
+export const SILENCE_ENDING = {
+  id: 'silence',
+  label: '沈黙',
+  epilogue: '何も答えなかった。受付はうなずき、空白の患者票をファイルへ滑らせた。病院は、言葉のない来院も受け入れる。',
+  ticket: { name: '——', reason: '——', location: '受付・保留' },
+};
+
+export const MEMORY_ENDING = {
+  id: 'memory',
+  label: '記憶',
+  epilogue: '「途中で目を覚ました場所」だけが来院したと記録された。身体はまだここにいる。記憶だけが、先に治療を受けている。',
+  ticket: { location: '再解釈地点', status: '記憶' },
+  requiresReinterpret: 2,
+};
+
+export function getReceptionChoices(state) {
+  const choices = [...RECEPTION_CHOICES];
+  if (state.reinterpretCount >= MEMORY_ENDING.requiresReinterpret) {
+    choices.push(MEMORY_ENDING);
+  }
+  return choices;
+}
+
+export function resolveEnding(choiceId) {
+  if (choiceId === 'silence') return SILENCE_ENDING;
+  return RECEPTION_CHOICES.find((c) => c.id === choiceId)
+    ?? (choiceId === 'memory' ? MEMORY_ENDING : null);
+}

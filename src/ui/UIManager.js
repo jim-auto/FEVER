@@ -237,10 +237,15 @@ export class UIManager {
     });
   }
 
-  showChoiceDialog(question, options) {
+  showChoiceDialog(question, options, { timeoutMs = 0 } = {}) {
     return new Promise((resolve) => {
+      const timeoutHint = timeoutMs > 0
+        ? `<p class="choice-timeout">答えないことも、来院の形になる</p>`
+        : '';
+
       this.choiceDialog.innerHTML = `
         <p class="question">${question}</p>
+        ${timeoutHint}
         <div class="choices">
           ${options.map((o) =>
             `<button class="choice-btn" data-id="${o.id}">${o.label}</button>`,
@@ -248,22 +253,61 @@ export class UIManager {
         </div>
       `;
       this.choiceEl.classList.add('active');
+
+      let settled = false;
+      const finish = (id) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        this.choiceEl.classList.remove('active');
+        resolve(id);
+      };
+
+      let timer = null;
+      if (timeoutMs > 0) {
+        timer = setTimeout(() => finish('silence'), timeoutMs);
+      }
+
       this.choiceDialog.querySelectorAll('.choice-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          this.choiceEl.classList.remove('active');
-          resolve(btn.dataset.id);
-        });
+        btn.addEventListener('click', () => finish(btn.dataset.id));
       });
     });
   }
 
-  showEnding({ title, epilogue }) {
+  formatPatientTicketSummary(state) {
+    const t = state.patientTicket;
+    const rows = [
+      ['氏名', t.name],
+      ['現在地', t.location],
+      ['行き先', t.destination],
+      ['体温', typeof t.temperature === 'number' ? `${t.temperature.toFixed(1)}°C` : t.temperature],
+      ['身分', t.status],
+      ['予約', t.appointment],
+      ['付き添い', t.companion],
+      ['来院理由', t.reason],
+    ];
+    const reinterpret = state.reinterpretCount > 0
+      ? `<p class="ending-meta">再解釈 ${state.reinterpretCount} 回</p>`
+      : '';
+    return `
+      ${reinterpret}
+      <div class="ending-ticket">
+        ${rows.map(([label, value]) =>
+          `<div class="ending-ticket__row"><span>${label}</span><span>${value ?? '——'}</span></div>`,
+        ).join('')}
+      </div>
+    `;
+  }
+
+  showEnding({ title, epilogue, state }) {
+    const ticketHtml = state ? this.formatPatientTicketSummary(state) : '';
     const overlay = document.createElement('div');
     overlay.className = 'start-screen interactive ending-screen';
     overlay.innerHTML = `
       <h1>FEVER</h1>
       <p class="ending-title">${title}</p>
       <p class="ending-epilogue">${epilogue}</p>
+      ${ticketHtml}
       <button id="restart-btn">最初から</button>
       <p class="note">病院へ行く</p>
     `;

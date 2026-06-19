@@ -490,6 +490,13 @@ body {
   line-height: 1.7;
 }
 
+.choice-timeout {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: rgba(168, 210, 255, 0.55);
+  margin: -1rem 0 1.25rem;
+}
+
 .choice-dialog .choices {
   display: flex;
   flex-direction: column;
@@ -525,8 +532,38 @@ body {
   font-size: 0.88rem;
   line-height: 1.85;
   color: rgba(244, 246, 240, 0.6);
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   padding: 0 1rem;
+}
+
+.ending-meta {
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: rgba(168, 210, 255, 0.65);
+  margin-bottom: 0.75rem;
+}
+
+.ending-ticket {
+  max-width: 280px;
+  margin: 0 auto 2rem;
+  padding: 0.75rem 1rem;
+  background: rgba(232, 226, 212, 0.12);
+  border: 1px solid rgba(244, 246, 240, 0.12);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.ending-ticket__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: rgba(244, 246, 240, 0.55);
+}
+
+.ending-ticket__row span:last-child {
+  text-align: right;
+  color: rgba(244, 246, 240, 0.78);
 }
 
 .reduced-motion * {

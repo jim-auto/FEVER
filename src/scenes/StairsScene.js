@@ -189,6 +189,8 @@ export class StairsScene {
       audio: `${temperatureToFloor(this.game.state.temperature)}階——体温と同じ数値が、階数になっている。`,
       duration: 5000,
     });
+    await this.game.ui.wait(4200);
+    this.game.ui.setObjective('階段を下る · 水/手すりで体温↓');
   }
 
   drinkWater() {
@@ -350,6 +352,7 @@ export class StairsScene {
 
   async exitBuilding() {
     const { ui } = this.game;
+    ui.resetObjective();
     ui.showSubtitle({
       audio: '建物を出た。交差点の方から、信号の電子音が聞こえる。',
       duration: 3500,

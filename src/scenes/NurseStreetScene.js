@@ -28,6 +28,7 @@ export class NurseStreetScene {
     this.blockCooldown = 0;
     this.blockCount = 0;
     this.reinterpreted = false;
+    this.guideShown = false;
     this.groundShadow = null;
     this.footstepTimer = 0;
   }
@@ -153,6 +154,7 @@ export class NurseStreetScene {
       duration: 4500,
     });
     this.nursePhase = 1;
+    this.game.ui.setObjective('看護師の影の間を通る');
   }
 
   isInShadow(pos) {
@@ -221,6 +223,7 @@ export class NurseStreetScene {
   async exitStreet() {
     if (this.exited) return;
     this.exited = true;
+    this.game.ui.resetObjective();
     this.game.ui.showSubtitle({
       audio: '影を抜けた。向こうの広場に、病院の形が見える。',
       duration: 4000,
@@ -257,6 +260,9 @@ export class NurseStreetScene {
     const nearest = this.getNearestInteractable(pos);
     if (nearest && !this.exited) {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (!this.exited && this.nursePhase >= 1 && !this.guideShown) {
+      this.guideShown = true;
+      this.game.ui.showPrompt('足元を避け、地面の暗い影の帯を通る');
     } else if (!this.exited) {
       this.game.ui.hidePrompt();
     }

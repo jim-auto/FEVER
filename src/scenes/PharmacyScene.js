@@ -30,6 +30,7 @@ export class PharmacyScene {
     this.interactables = [];
     this.shelfGroup = new THREE.Group();
     this.shelfAngle = 0;
+    this.outsideMesh = null;
     this.boughtOutside = false;
     this.boughtMedicine = false;
     this.exited = false;
@@ -117,6 +118,12 @@ export class PharmacyScene {
     mesh.position.set(x, y, z);
     this.shelfGroup.add(mesh);
     this.interactables.push(mesh);
+    if (id === 'outside') {
+      mesh.material = mesh.material.clone();
+      mesh.material.emissive = new THREE.Color(0x88ccff);
+      mesh.material.emissiveIntensity = 0.4;
+      this.outsideMesh = mesh;
+    }
   }
 
   async runIntro() {
@@ -132,6 +139,7 @@ export class PharmacyScene {
       duration: 4500,
     });
     this.game.state.getRule('pharmacy_exit')?.demonstrate();
+    this.game.ui.setObjective('回転棚の「外」を買う → 出口');
   }
 
   buyMedicine(id) {
@@ -151,6 +159,7 @@ export class PharmacyScene {
       });
       this.door.visible = true;
       rule?.demonstrate();
+      ui.resetObjective();
       ui.showSubtitle({
         audio: '「外」を受け取った。使っていない一時間が、代金として消えた。',
         duration: 4500,
@@ -269,6 +278,11 @@ export class PharmacyScene {
     this.shelfAngle += dt * 0.15;
     this.shelfGroup.rotation.y = this.shelfAngle;
 
+    if (this.outsideMesh && !this.boughtOutside) {
+      const pulse = 0.32 + Math.sin(Date.now() * 0.002) * 0.18;
+      this.outsideMesh.material.emissiveIntensity = pulse;
+    }
+
     const pos = this.game.player.getPosition();
     if (!this.boughtOutside && pos.z > 2.2 && !this.game.state.hasFlag('pharmacy_blocked')) {
       this.game.state.addFlag('pharmacy_blocked');
@@ -277,6 +291,8 @@ export class PharmacyScene {
     const nearest = this.getNearestInteractable(pos);
     if (nearest && !this.exited) {
       this.game.ui.showPrompt(`[E] ${nearest.userData.label}`);
+    } else if (!this.boughtOutside && !this.exited) {
+      this.game.ui.showPrompt('回転棚の青い「外」を探して E');
     } else if (!this.exited) {
       this.game.ui.hidePrompt();
     }
