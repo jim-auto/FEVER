@@ -53,7 +53,7 @@ export class HomeScene {
     this.setupCallbacks();
 
     this.game.player.setPosition(0, 1.55, 0.5);
-    this.game.player.enable();
+    this.game.player.disable();
     this.runIntro();
   }
 
@@ -194,19 +194,30 @@ export class HomeScene {
   }
 
   async runIntro() {
-    await this.game.ui.wait(1500);
-    this.game.ui.showSubtitle({
+    const { ui, state } = this.game;
+    if (state.hasFlag('isekai_transfer')) {
+      state.patientTicket.location = '自宅';
+      ui.updatePatientTicket();
+      ui.showSubtitle({
+        speaker: '——',
+        audio: '転移先の座標が確定した。表示名は「自宅」。',
+        duration: 4200,
+      });
+      await ui.wait(3800);
+    }
+    ui.showSubtitle({
       audio: '熱い。体温計は40.2度を指している。',
       duration: 4000,
     });
-    await this.game.ui.wait(4200);
-    this.game.ui.setObjective('→ 前の机 · 電話に E');
-    this.game.ui.showSubtitle({
+    await ui.wait(4200);
+    ui.setObjective('→ 前の机 · 電話に E');
+    ui.showSubtitle({
       audio: '目の前の机に電話がある。先に病院へ連絡してから、外へ出よう。',
       text: 'W で前へ · 近づいて E でかける',
       duration: 5500,
     });
     this.game.player.lookAtPoint(0, -1.05);
+    this.game.player.enable();
     this.introComplete = true;
   }
 

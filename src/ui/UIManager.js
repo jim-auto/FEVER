@@ -1,4 +1,5 @@
 import { FeverLayer } from '../core/GameState.js';
+import { runIsekaiPrologue } from './IsekaiPrologue.js';
 
 const TICKET_FIELDS = [
   ['name', '氏名'],
@@ -67,9 +68,11 @@ export class UIManager {
         <div class="choice-dialog" id="choice-dialog"></div>
       </div>
       <div class="start-screen interactive" id="start-screen">
+        <div class="start-screen__glow"></div>
         <h1>FEVER</h1>
+        <p class="isekai-hook">——熱が、異界への切符になる。</p>
         <p class="tagline">病院へ行く</p>
-        <button id="start-btn">始める</button>
+        <button id="start-btn">目を覚ます</button>
         <p class="note">WASD 移動 · マウス 視点 · Shift 目を閉じる</p>
       </div>
     `;
@@ -128,6 +131,10 @@ export class UIManager {
       this.startScreen.classList.add('hidden');
       callback();
     });
+  }
+
+  runIsekaiPrologue(state, audio) {
+    return runIsekaiPrologue(this, state, audio);
   }
 
   updatePatientTicket() {

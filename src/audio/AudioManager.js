@@ -289,6 +289,46 @@ export class AudioManager {
     }
   }
 
+  playIsekaiTransfer(reduced = false) {
+    if (!this.initialized || this.muted) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const vol = (this.reduced || reduced) ? 0.35 : 1;
+
+    const rumble = ctx.createOscillator();
+    rumble.type = 'sine';
+    rumble.frequency.setValueAtTime(55, t);
+    rumble.frequency.exponentialRampToValueAtTime(28, t + 2.2);
+    const rumbleG = ctx.createGain();
+    rumbleG.gain.setValueAtTime(0, t);
+    rumbleG.gain.linearRampToValueAtTime(0.12 * vol, t + 0.4);
+    rumbleG.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+    rumble.connect(rumbleG).connect(this.master);
+    rumble.start(t);
+    rumble.stop(t + 2.5);
+
+    const chime = [392, 523.25, 659.25, 783.99];
+    chime.forEach((freq, i) => {
+      setTimeout(() => this.playTone(freq, 0.9, 0.035 * vol), 600 + i * 220);
+    });
+
+    if (!this.reduced && !reduced) {
+      const bufferSize = Math.floor(ctx.sampleRate * 0.35);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const nG = ctx.createGain();
+      nG.gain.setValueAtTime(0.08, t + 0.15);
+      nG.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      noise.connect(nG).connect(this.master);
+      noise.start(t + 0.15);
+    }
+  }
+
   playCough() {
     if (!this.initialized || this.muted) return;
     const ctx = this.ctx;

@@ -105,8 +105,12 @@ export class Game {
   }
 
   start() {
-    this.ui.onStart(() => {
+    this.ui.onStart(async () => {
       this.audio.unlock();
+      this.canvas.classList.add('isekai-warp');
+      await this.ui.fadeOut(500);
+      await this.ui.runIsekaiPrologue(this.state, this.audio);
+      this.canvas.classList.remove('isekai-warp');
       this.loadScene(new HomeScene(this));
       this.running = true;
       this.tick();
