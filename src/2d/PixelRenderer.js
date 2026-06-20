@@ -1,6 +1,7 @@
 import { P } from './palette.js';
 import { SPRITE_COLORS, PLAYER, facingFromAngle, ITEM_OUTSIDE } from './sprites.js';
 import { FeverLayer } from '../core/GameState.js';
+import { VIEW_WIDTH, VIEW_HEIGHT, PIXEL_UNIT, SPRITE_SCALE, MIN_DISPLAY_SCALE } from './viewConfig.js';
 
 const FEVER_TINTS = {
   [FeverLayer.LOW]: 'rgba(200, 217, 204, 0.06)',
@@ -10,11 +11,11 @@ const FEVER_TINTS = {
 };
 
 export class PixelRenderer {
-  constructor(canvas, width = 320, height = 180) {
+  constructor(canvas, width = VIEW_WIDTH, height = VIEW_HEIGHT) {
     this.canvas = canvas;
     this.width = width;
     this.height = height;
-    this.unit = 8;
+    this.unit = PIXEL_UNIT;
     this.camera = { x: 0, z: 0 };
     this.scale = 1;
     this.bg = P.void;
@@ -36,10 +37,17 @@ export class PixelRenderer {
     this.resize();
   }
 
+  get dot() {
+    return this.unit / 8;
+  }
+
   resize() {
     const sw = window.innerWidth;
     const sh = window.innerHeight;
-    const scale = this.fixedScale ?? Math.max(1, Math.floor(Math.min(sw / this.width, sh / this.height)));
+    const scale = this.fixedScale ?? Math.max(
+      MIN_DISPLAY_SCALE,
+      Math.floor(Math.min(sw / this.width, sh / this.height)),
+    );
     this.scale = scale;
     this.canvas.width = this.width * scale;
     this.canvas.height = this.height * scale;
@@ -143,7 +151,7 @@ export class PixelRenderer {
     }
   }
 
-  drawSpriteWorld(wx, wz, rows, scale = 1) {
+  drawSpriteWorld(wx, wz, rows, scale = SPRITE_SCALE) {
     const { x, y } = this.worldToScreen(wx, wz);
     const w = rows[0].length * scale;
     const h = rows.length * scale;
@@ -152,7 +160,7 @@ export class PixelRenderer {
 
   label(text, wx, wz, color = P.fluorescent) {
     const { x, y } = this.worldToScreen(wx, wz);
-    this.ctx.font = '6px monospace';
+    this.ctx.font = `${Math.max(4, Math.round(5 * this.dot))}px monospace`;
     this.ctx.fillStyle = color;
     this.ctx.textAlign = 'center';
     this.ctx.fillText(text, x, y);
@@ -203,30 +211,33 @@ export class PixelRenderer {
     const flick = 0.5 + Math.sin(this.flicker * 3.1) * 0.08 * intensity;
     this.rectWorld(wx, wz, 0.8, 0.06, P.fluorescent);
     const { x, y } = this.worldToScreen(wx, wz);
+    const d = this.dot;
     this.ctx.fillStyle = `rgba(244, 246, 240, ${0.06 * flick})`;
-    this.ctx.fillRect(x - 24, y - 36, 48, 48);
+    this.ctx.fillRect(x - 24 * d, y - 36 * d, 48 * d, 48 * d);
   }
 
   drawDoor(wx, wz, rot = 0, highlight = false) {
     const { x, y } = this.worldToScreen(wx, wz);
+    const d = this.dot;
     this.ctx.save();
     this.ctx.translate(x, y);
     this.ctx.rotate(rot);
-    this.px(-3, -7, 6, 14, highlight ? P.highlight : P.door);
-    this.px(-2, -5, 4, 10, P.wood);
-    this.px(1, 0, 1, 1, P.woodLight);
+    this.px(-3 * d, -7 * d, 6 * d, 14 * d, highlight ? P.highlight : P.door);
+    this.px(-2 * d, -5 * d, 4 * d, 10 * d, P.wood);
+    this.px(1 * d, 0, 1 * d, 1 * d, P.woodLight);
     this.ctx.restore();
   }
 
   drawPhone(wx, wz, pulse = 1) {
     const { x, y } = this.worldToScreen(wx, wz);
+    const d = this.dot;
     const glow = 0.35 + Math.sin(this.flicker * 2.4) * 0.2 * pulse;
-    this.px(x - 8, y - 2, 16, 6, P.phone);
-    this.px(x - 6, y - 5, 10, 3, P.phoneGlow);
-    this.px(x + 2, y - 4, 6, 8, P.phone);
+    this.px(x - 8 * d, y - 2 * d, 16 * d, 6 * d, P.phone);
+    this.px(x - 6 * d, y - 5 * d, 10 * d, 3 * d, P.phoneGlow);
+    this.px(x + 2 * d, y - 4 * d, 6 * d, 8 * d, P.phone);
     if (pulse > 0) {
       this.ctx.fillStyle = `rgba(168, 210, 255, ${glow * 0.4})`;
-      this.ctx.fillRect(x - 14, y - 12, 28, 20);
+      this.ctx.fillRect(x - 14 * d, y - 12 * d, 28 * d, 20 * d);
     }
   }
 
@@ -253,9 +264,9 @@ export class PixelRenderer {
     const face = lying ? 'lie' : (facing ?? facingFromAngle(dir));
     const frames = PLAYER[face] ?? PLAYER.down;
     const frame = lying ? 0 : walkFrame % frames.length;
+    const scale = lying ? SPRITE_SCALE : SPRITE_SCALE;
     const { x, y } = this.worldToScreen(wx, wz);
-    const scale = lying ? 1 : 1;
-    const by = y + (lying ? 2 : bob);
+    const by = y + (lying ? 2 * this.dot : bob);
     this.drawSprite(frames[frame], x - (frames[frame][0].length * scale) / 2, by - (frames[frame].length * scale) / 2, scale);
 
     if (moving && !lying) {
@@ -280,7 +291,7 @@ export class PixelRenderer {
       const alpha = p.life / p.max;
       this.ctx.fillStyle = p.color;
       this.ctx.globalAlpha = alpha * 0.6;
-      this.px(p.x, p.y, 2, 2, p.color);
+      this.px(p.x, p.y, 2 * this.dot, 2 * this.dot, p.color);
       p.y += 0.3;
     }
     this.ctx.globalAlpha = 1;
@@ -316,17 +327,19 @@ export class PixelRenderer {
     this.rectWorld(wx, wz, 0.08, 2.5, cooled ? P.glass : P.wood);
     if (cooled) {
       const { x, y } = this.worldToScreen(wx, wz);
+      const d = this.dot;
       this.ctx.fillStyle = 'rgba(136, 187, 238, 0.25)';
-      this.ctx.fillRect(x - 4, y - 12, 8, 24);
+      this.ctx.fillRect(x - 4 * d, y - 12 * d, 8 * d, 24 * d);
     }
   }
 
   drawNpc(wx, wz, sprite, color = P.white) {
     if (sprite) {
-      this.drawSpriteWorld(wx, wz, sprite, 1);
+      this.drawSpriteWorld(wx, wz, sprite, SPRITE_SCALE);
     } else {
       this.rectWorld(wx, wz, 0.5, 0.5, color);
-      this.px(this.worldToScreen(wx, wz).x - 2, this.worldToScreen(wx, wz).y - 5, 4, 4, P.cream);
+      const d = this.dot;
+      this.px(this.worldToScreen(wx, wz).x - 2 * d, this.worldToScreen(wx, wz).y - 5 * d, 4 * d, 4 * d, P.cream);
     }
   }
 
@@ -336,10 +349,11 @@ export class PixelRenderer {
     this.rectWorld(0, roadD / 2 - 3, roadW, 6, P.floorLight);
     for (let i = -3; i <= 3; i++) {
       const { x, y } = this.worldToScreen(i * 0.7 + stripeWarp * i, 0);
+      const d = this.dot;
       this.ctx.save();
       this.ctx.translate(x, y);
       this.ctx.rotate(stripeWarp * 0.3);
-      this.px(-2, -9, 4, 18, P.crosswalk);
+      this.px(-2 * d, -9 * d, 4 * d, 18 * d, P.crosswalk);
       this.ctx.restore();
     }
   }
@@ -348,10 +362,11 @@ export class PixelRenderer {
     this.rectWorld(wx, wz, 0.15, 1.2, P.white);
     const c = state === 'red' ? P.red : P.green;
     const { x, y } = this.worldToScreen(wx, wz);
-    this.px(x - 2, y - 5, 4, 4, c);
+    const d = this.dot;
+    this.px(x - 2 * d, y - 5 * d, 4 * d, 4 * d, c);
     if (state === 'red') {
       this.ctx.fillStyle = `rgba(200, 64, 64, ${0.15 + Math.sin(this.flicker * 4) * 0.08})`;
-      this.ctx.fillRect(x - 6, y - 10, 12, 12);
+      this.ctx.fillRect(x - 6 * d, y - 10 * d, 12 * d, 12 * d);
     }
   }
 
@@ -364,20 +379,20 @@ export class PixelRenderer {
       this.rectWorld(wx, wz, 0.12, 2.2, P.white);
     }
     this.label('さむけ', 0, -2.5, P.text);
-    // 中央の回転棚
     this.rectWorld(0, 0, 1.6, 1.6, P.wood);
+    const d = this.dot;
     this.ctx.save();
     const { x, y } = this.worldToScreen(0, 0);
     this.ctx.translate(x, y);
     this.ctx.rotate(shelfAngle);
-    this.px(-6, -1, 12, 2, P.woodLight);
-    this.px(-1, -6, 2, 12, P.woodLight);
+    this.px(-6 * d, -1 * d, 12 * d, 2 * d, P.woodLight);
+    this.px(-1 * d, -6 * d, 2 * d, 12 * d, P.woodLight);
     this.ctx.restore();
   }
 
   drawShelfItem(wx, wz, label, highlight = false) {
     if (highlight) {
-      this.drawSpriteWorld(wx, wz, ITEM_OUTSIDE, 1);
+      this.drawSpriteWorld(wx, wz, ITEM_OUTSIDE);
     } else {
       this.rectWorld(wx, wz, 0.35, 0.45, P.white);
     }
@@ -429,13 +444,14 @@ export class PixelRenderer {
   }
 
   drawInteractMarker(wx, wz) {
-    const bob = Math.sin(this.flicker * 3) * 2;
+    const bob = Math.sin(this.flicker * 3) * 2 * this.dot;
     const { x, y } = this.worldToScreen(wx, wz);
-    const my = y - 10 + bob;
-    this.px(x - 1, my, 2, 2, P.highlight);
-    this.px(x - 2, my + 2, 4, 2, P.highlight);
+    const my = y - 10 * this.dot + bob;
+    const d = this.dot;
+    this.px(x - 1 * d, my, 2 * d, 2 * d, P.highlight);
+    this.px(x - 2 * d, my + 2 * d, 4 * d, 2 * d, P.highlight);
     this.ctx.fillStyle = 'rgba(168, 210, 255, 0.3)';
-    this.ctx.fillRect(x - 4, my - 2, 8, 8);
+    this.ctx.fillRect(x - 4 * d, my - 2 * d, 8 * d, 8 * d);
   }
 
   drawFeverOverlay() {
@@ -476,7 +492,7 @@ export class PixelRenderer {
   }
 
   drawSceneTitle(text) {
-    this.ctx.font = '6px monospace';
+    this.ctx.font = `${Math.max(4, Math.round(5 * this.dot))}px monospace`;
     this.ctx.fillStyle = 'rgba(244, 246, 240, 0.55)';
     this.ctx.textAlign = 'left';
     this.ctx.fillText(text, 6, 10);

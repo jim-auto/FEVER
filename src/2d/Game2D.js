@@ -5,6 +5,7 @@ import { BodyActions } from '../player/BodyActions.js';
 import { UIManager } from '../ui/UIManager.js';
 import { AudioManager } from '../audio/AudioManager.js';
 import { TouchControls } from '../input/TouchControls.js';
+import { SCREENSHOT_SCALE } from './viewConfig.js';
 import { HomeScene2D } from './scenes/HomeScene2D.js';
 
 export class Game2D {
@@ -121,7 +122,7 @@ export class Game2D {
     this.state.patientTicket.location = '自宅';
     this.ui.updatePatientTicket();
     this.ui.setObjective('→ 前の机 · 電話に E');
-    this.renderer.setFixedScale(3);
+    this.renderer.setFixedScale(SCREENSHOT_SCALE);
     this.onResize();
     this.loadScene(new HomeScene2D(this, { demo: true }));
     this.running = true;

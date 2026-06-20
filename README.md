@@ -6,7 +6,7 @@
 
 [![2D版 — 第一幕：自宅](assets/readme-2d.png)](https://jim-auto.github.io/FEVER/index-2d.html)
 
-*2D版（320×180 ドット絵）— 六畳間から病院へ*
+*2D版（480×270 ドット絵 · 整数スケール）— 六畳間から病院へ*
 
 ## コンセプト
 
@@ -87,7 +87,7 @@ npm run build
 ## 技術スタック
 
 - [Three.js](https://threejs.org/) — 3D版
-- Canvas 2D — 2D版（320×180 ドット絵、整数スケール）
+- Canvas 2D — 2D版（480×270 内部解像度 · 整数スケール）
 - [Vite](https://vitejs.dev/)
 
 ## ライセンス
