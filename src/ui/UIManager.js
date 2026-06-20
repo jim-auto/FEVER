@@ -13,9 +13,10 @@ const TICKET_FIELDS = [
 ];
 
 export class UIManager {
-  constructor(rootEl, gameState) {
+  constructor(rootEl, gameState, options = {}) {
     this.root = rootEl;
     this.state = gameState;
+    this.renderMode = options.renderMode ?? '3d';
     this.a11y = {
       reducedMotion: false,
       reducedShake: false,
@@ -40,7 +41,9 @@ export class UIManager {
       <div class="patient-ticket" id="patient-ticket"></div>
       <div class="subtitle-bar" id="subtitle-bar"></div>
       <div class="interaction-prompt" id="interaction-prompt"></div>
-      <div class="eyes-closed-overlay" id="eyes-closed"><span class="hint">目を開ける — 左クリック</span></div>
+      <div class="eyes-closed-overlay" id="eyes-closed"><span class="hint">${this.renderMode === '2d'
+        ? '目を開ける — 左クリック / Space'
+        : '目を開ける — 左クリック'}</span></div>
       <div class="body-actions-hud">
         <div><kbd>Shift</kbd> 目を閉じる</div>
         <div><kbd>Space</kbd> 息を止める</div>
@@ -73,7 +76,12 @@ export class UIManager {
         <p class="isekai-hook">——熱が、異界への切符になる。</p>
         <p class="tagline">病院へ行く</p>
         <button id="start-btn">目を覚ます</button>
-        <p class="note">WASD 移動 · マウス 視点 · Shift 目を閉じる</p>
+        <p class="note">${this.renderMode === '2d'
+          ? 'WASD 移動 · Shift 目を閉じる · ドット絵モード'
+          : 'WASD 移動 · マウス 視点 · Shift 目を閉じる'}</p>
+        <p class="mode-switch">${this.renderMode === '2d'
+          ? '<a href="./">3D版へ</a>'
+          : '<a href="./index-2d.html">2D版（ドット絵）へ</a>'}</p>
       </div>
     `;
 

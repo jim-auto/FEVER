@@ -38,6 +38,62 @@ body {
   height: 100%;
 }
 
+#game-canvas.pixel-mode {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.app-2d {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0c0e;
+}
+
+.app-2d #game-canvas {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* README スクリーンショット用 — キャンバスを画面いっぱいに */
+body.screenshot-capture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0c0e;
+  overflow: hidden;
+}
+
+body.screenshot-capture #app.app-2d {
+  position: relative;
+  width: 960px;
+  height: 540px;
+}
+
+body.screenshot-capture .app-2d #game-canvas {
+  width: 960px !important;
+  height: 540px !important;
+  max-width: none;
+  max-height: none;
+}
+
+.mode-switch {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  opacity: 0.72;
+}
+
+.mode-switch a {
+  color: rgba(168, 210, 255, 0.95);
+  text-decoration: none;
+}
+
+.mode-switch a:hover {
+  text-decoration: underline;
+}
+
 #ui-root {
   position: absolute;
   inset: 0;
@@ -799,6 +855,15 @@ body {
   inset: 0;
   right: 30%;
   z-index: 40;
+}
+
+.touch-controls--2d .touch-joystick {
+  width: 120px;
+  height: 120px;
+}
+
+.touch-controls--2d .touch-buttons {
+  bottom: 2.5rem;
 }
 
 .touch-buttons {

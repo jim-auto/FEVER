@@ -4,6 +4,7 @@
 export class TouchControls {
   constructor(game) {
     this.game = game;
+    this.mode = game.mode ?? '3d';
     this.enabled = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (!this.enabled) return;
 
@@ -37,6 +38,11 @@ export class TouchControls {
     this.joystickEl = el.querySelector('#touch-joystick');
     this.knobEl = el.querySelector('#touch-knob');
     this.lookEl = el.querySelector('#touch-look');
+
+    if (this.mode === '2d') {
+      this.lookEl.style.display = 'none';
+      el.classList.add('touch-controls--2d');
+    }
   }
 
   bind() {
@@ -70,12 +76,12 @@ export class TouchControls {
           this.knobEl.style.transform = `translate(${cx}px, ${cy}px)`;
           this.applyJoystick(cx, cy);
         }
-        if (t.identifier === this.lookTouchId) {
+        if (t.identifier === this.lookTouchId && this.mode !== '2d') {
           e.preventDefault();
           const mdx = t.clientX - this.lookLast.x;
           const mdy = t.clientY - this.lookLast.y;
           this.lookLast = { x: t.clientX, y: t.clientY };
-          game.player.applyLookDelta(mdx, mdy);
+          game.player.applyLookDelta?.(mdx, mdy);
         }
       }
     }, { passive: false });
