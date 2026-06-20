@@ -17,6 +17,7 @@ const LANDINGS = [
  */
 export class StairsScene2D {
   static audioPreset = 'stairs';
+  static zoom = 1.75;
 
   constructor(game) {
     this.game = game;

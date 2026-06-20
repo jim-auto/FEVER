@@ -133,6 +133,7 @@ export class Game2D {
     if (this.currentScene) this.currentScene.unload();
     this.currentScene = scene;
     scene.load();
+    this.renderer.setZoom(scene.constructor.zoom ?? 1);
     this.ui.updateFeverLayer(this.state.feverLayer);
     this.renderer.setFeverLayer(this.state.feverLayer);
     const preset = scene.constructor.audioPreset;

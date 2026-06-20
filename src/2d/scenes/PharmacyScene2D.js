@@ -15,6 +15,7 @@ const MEDICINES = {
  */
 export class PharmacyScene2D {
   static audioPreset = 'pharmacy';
+  static zoom = 2;
 
   constructor(game) {
     this.game = game;

@@ -9,6 +9,7 @@ import { triggerReinterpret } from '../../core/Reinterpret.js';
  */
 export class NurseStreetScene2D {
   static audioPreset = 'nurse';
+  static zoom = 1.25;
 
   constructor(game) {
     this.game = game;

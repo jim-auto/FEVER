@@ -13,6 +13,7 @@ const BLOCK_Z = -0.3;
  */
 export class CrosswalkScene2D {
   static audioPreset = 'crosswalk';
+  static zoom = 1.4;
 
   constructor(game) {
     this.game = game;

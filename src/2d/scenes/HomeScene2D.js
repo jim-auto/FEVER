@@ -9,6 +9,7 @@ import { StairsScene2D } from './StairsScene2D.js';
  */
 export class HomeScene2D {
   static audioPreset = 'home';
+  static zoom = 4.5;
 
   constructor(game, options = {}) {
     this.game = game;

@@ -16,6 +16,7 @@ export class PixelRenderer {
     this.width = width;
     this.height = height;
     this.unit = PIXEL_UNIT;
+    this.sceneZoom = 1;
     this.camera = { x: 0, z: 0 };
     this.scale = 1;
     this.bg = P.void;
@@ -37,8 +38,20 @@ export class PixelRenderer {
     this.resize();
   }
 
+  get effectiveUnit() {
+    return this.unit * this.sceneZoom;
+  }
+
   get dot() {
-    return this.unit / 8;
+    return this.effectiveUnit / 8;
+  }
+
+  get spriteScale() {
+    return SPRITE_SCALE * this.sceneZoom;
+  }
+
+  setZoom(zoom) {
+    this.sceneZoom = zoom;
   }
 
   resize() {
@@ -75,8 +88,8 @@ export class PixelRenderer {
     if (this.shakeTimer <= 0) return { x: 0, y: 0 };
     const t = this.shakeTimer;
     return {
-      x: (Math.random() - 0.5) * this.shakeMag * t * this.unit * 12,
-      y: (Math.random() - 0.5) * this.shakeMag * t * this.unit * 12,
+      x: (Math.random() - 0.5) * this.shakeMag * t * this.effectiveUnit * 12,
+      y: (Math.random() - 0.5) * this.shakeMag * t * this.effectiveUnit * 12,
     };
   }
 
@@ -122,8 +135,8 @@ export class PixelRenderer {
     const cz = this.height / 2;
     const shake = this.getShakeOffset();
     return {
-      x: Math.round(cx + (wx - this.camera.x) * this.unit + shake.x),
-      y: Math.round(cz + (wz - this.camera.z) * this.unit + shake.y),
+      x: Math.round(cx + (wx - this.camera.x) * this.effectiveUnit + shake.x),
+      y: Math.round(cz + (wz - this.camera.z) * this.effectiveUnit + shake.y),
     };
   }
 
@@ -135,7 +148,7 @@ export class PixelRenderer {
 
   rectWorld(wx, wz, ww, wh, color) {
     const { x, y } = this.worldToScreen(wx, wz);
-    this.px(x - (ww * this.unit) / 2, y - (wh * this.unit) / 2, ww * this.unit, wh * this.unit, color);
+    this.px(x - (ww * this.effectiveUnit) / 2, y - (wh * this.effectiveUnit) / 2, ww * this.effectiveUnit, wh * this.effectiveUnit, color);
   }
 
   /** スプライトをスクリーン座標に描画 */
@@ -151,7 +164,8 @@ export class PixelRenderer {
     }
   }
 
-  drawSpriteWorld(wx, wz, rows, scale = SPRITE_SCALE) {
+  drawSpriteWorld(wx, wz, rows, scale) {
+    const s = scale ?? this.spriteScale;
     const { x, y } = this.worldToScreen(wx, wz);
     const w = rows[0].length * scale;
     const h = rows.length * scale;
@@ -254,7 +268,7 @@ export class PixelRenderer {
 
   drawThermometer(wx, wz, rows) {
     if (rows) {
-      this.drawSpriteWorld(wx, wz - 0.1, rows, 1);
+      this.drawSpriteWorld(wx, wz - 0.1, rows);
     } else {
       this.rectWorld(wx, wz, 0.08, 0.25, P.red);
     }
@@ -264,7 +278,7 @@ export class PixelRenderer {
     const face = lying ? 'lie' : (facing ?? facingFromAngle(dir));
     const frames = PLAYER[face] ?? PLAYER.down;
     const frame = lying ? 0 : walkFrame % frames.length;
-    const scale = lying ? SPRITE_SCALE : SPRITE_SCALE;
+    const scale = this.spriteScale;
     const { x, y } = this.worldToScreen(wx, wz);
     const by = y + (lying ? 2 * this.dot : bob);
     this.drawSprite(frames[frame], x - (frames[frame][0].length * scale) / 2, by - (frames[frame].length * scale) / 2, scale);
@@ -317,7 +331,7 @@ export class PixelRenderer {
         const { x, y } = this.worldToScreen(0, wz);
         this.ctx.strokeStyle = P.highlight;
         this.ctx.globalAlpha = 0.35 + Math.sin(this.flicker * 2) * 0.15;
-        this.ctx.strokeRect(x - (w - 0.5) * this.unit / 2, y - 2, (w - 0.5) * this.unit, 4);
+        this.ctx.strokeRect(x - (w - 0.5) * this.effectiveUnit / 2, y - 2, (w - 0.5) * this.effectiveUnit, 4);
         this.ctx.globalAlpha = 1;
       }
     }
@@ -335,7 +349,7 @@ export class PixelRenderer {
 
   drawNpc(wx, wz, sprite, color = P.white) {
     if (sprite) {
-      this.drawSpriteWorld(wx, wz, sprite, SPRITE_SCALE);
+      this.drawSpriteWorld(wx, wz, sprite, this.spriteScale);
     } else {
       this.rectWorld(wx, wz, 0.5, 0.5, color);
       const d = this.dot;

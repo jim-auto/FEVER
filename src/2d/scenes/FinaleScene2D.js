@@ -6,6 +6,7 @@ import { getReceptionChoices, resolveEnding } from '../../data/endings.js';
  */
 export class FinaleScene2D {
   static audioPreset = 'finale';
+  static zoom = 1;
 
   constructor(game) {
     this.game = game;
